@@ -6,7 +6,7 @@ import java.util.ArrayList;
  * Abstract Node class representing every element within the file structure.
  * @author Tomasz Wierciński
  */
-public abstract class Node {
+public abstract class Node implements Cloneable {
     
     protected String title;  // name of the node
     protected Node parent = null;
@@ -42,6 +42,9 @@ public abstract class Node {
     public String toString() {
         return title;
     }
+    
+    @Override
+    public abstract Object clone() throws CloneNotSupportedException;
 
     /**
      * Returns file structure from Node as a string to be displayed.

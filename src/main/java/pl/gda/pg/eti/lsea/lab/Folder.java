@@ -27,9 +27,34 @@ public class Folder extends Node {
     }
     //endregion
 
+    //region Setters
+    public void setChildren(ArrayList<Node> children) {
+        this.children = children;
+    }
+    //endregion
+    
+    /**
+     * {@inheritDoc}
+     * @return 
+     */
     @Override
     public String toString() {
         return "Folder(" + title + ")";
+    }
+    
+    @Override
+    public Folder clone() throws CloneNotSupportedException {
+        Folder folder = new Folder(this.title);
+        
+        // ArrayList cloning constructor won't work here due to parent reference.
+        ArrayList<Node> children_clone = new ArrayList<>(this.children.size());
+        for (Node child : this.children) {
+            // Can't add directly to folder due to concurrent modification issues. :<
+            Node child_clone = (Node) child.clone();
+            folder.add(child_clone);
+        }
+        
+        return folder;
     }
 
     /**

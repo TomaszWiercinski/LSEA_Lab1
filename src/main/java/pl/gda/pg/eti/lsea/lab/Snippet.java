@@ -39,6 +39,12 @@ public class Snippet extends Node{
     }
     //endregion
 
+    @Override
+    public Object clone() {
+        Snippet snippet = new Snippet(this.title, this.lang, this.snippet);
+        return snippet;
+    }
+    
     /**
      * Checks if the title of the Snippet contains the term. Non-case-sensitive.
      * Returns the Snippet if it's a match.

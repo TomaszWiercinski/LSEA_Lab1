@@ -156,14 +156,20 @@ public class Dashboard {
                     case "move":
                         current = ((Folder) current).getChildren().get(Integer.parseInt(response_arr[1]) - 1);
                         break;
-                    /*case "del":
+                    case "del":
                         ((Folder) current).getChildren().remove(Integer.parseInt(response_arr[1]) - 1);
-                        break;*/
+                        break;
                     case "up":
                         Node parent = current.getParent();
                         if (parent != null) {
                             current = current.getParent();
                         }
+                        break;
+                    case "copy":
+                        Node selected = ((Folder)current).getChildren().get(Integer.parseInt(response_arr[1]) - 1);
+                        Node selected_copy = (Node) selected.clone();
+                        selected_copy.setTitle(selected.getTitle() + "_copy");
+                        ((Folder) current).add(selected_copy);
                         break;
                 }
             } catch (NumberFormatException ex) {
@@ -172,6 +178,8 @@ public class Dashboard {
                 System.out.println("Invalid node index!");
             } catch (ClassCastException ex) {
                 System.out.println("Command invalid within Snippet!");
+            } catch (CloneNotSupportedException ex) {
+                System.out.println("Cloning not supported for selected Nodes!");
             }
 
             // Check whether Node is Folder or Snippet to display valid commands and file structure/snippet.
@@ -180,7 +188,8 @@ public class Dashboard {
 
                 // Show valid actions for folders.
                 System.out.println("\nmove [id]: Move to the Folder, or view the Snippet.");
-                //System.out.println("del [id]: Delete an element in structure.");
+                System.out.println("del [id]: Delete an element in structure.");
+                System.out.println("copy [id]: Copy an element in structure.");
                 System.out.println("up: Move up in the structure.");
             } else if (current instanceof Snippet) {
                 displaySnippet(current);
