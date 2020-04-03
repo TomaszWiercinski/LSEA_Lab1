@@ -33,6 +33,15 @@ public class Folder extends Node {
     }
     //endregion
     
+    //region Mutators
+    public Node removeChild(int index) {
+        return children.remove(index);
+    }
+    public boolean removeChild(Node child) {
+        return children.remove(child);
+    }
+    //endregion
+    
     /**
      * {@inheritDoc}
      * @return 
