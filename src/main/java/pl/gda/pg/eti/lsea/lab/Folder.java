@@ -1,6 +1,7 @@
 package pl.gda.pg.eti.lsea.lab;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * A Folder which can contain any number of other Nodes (other Folder or a 
@@ -24,6 +25,15 @@ public class Folder extends Node {
     //region Getters
     public ArrayList<Node> getChildren() {
         return children;
+    }
+    public Node getChildFromTitle(String title) {
+        Node out = null;
+        for (Node child : children)
+            if (child.getTitle().equals(title)) {
+                out = child;
+                break;
+            }
+        return out;
     }
     //endregion
 
@@ -133,6 +143,21 @@ public class Folder extends Node {
 
         return found;
     }
+    
+    @Override
+    public Node getNodeFromPath(String[] path) {
+        Node out = null;
+        
+        if (path.length > 0) {
+            out = getChildFromTitle(path[0]);
+            if (out != null && path.length > 1)
+                out = out.getNodeFromPath(Arrays.copyOfRange(path, 1, path.length));
+        }
+        else if (path[0].equals(title))
+            out = this;
+            
+        return out;
+    }
 
     /**
      * Creates and shows an example folder structure.
@@ -169,5 +194,18 @@ public class Folder extends Node {
 
         System.out.println("\nSearch results for term \"A\" (not case-sensitive):");
         System.out.println(folder_main.searchTitle("A"));
+        
+        // Path usage examples
+        String path = "/subA";
+        System.out.println("\nContents of folder \"" + path + "\"");
+        System.out.println(folder_main.getNodeFromPath(path).getStructure());
+        
+        path = "subC/";
+        System.out.println("\nContents of folder \"" + path + "\"");
+        System.out.println(folder_main.getNodeFromPath(path).getStructure());
+        
+        path = "/subB/subB_A/";
+        System.out.println("\nContents of folder \"" + path + "\"");
+        System.out.println(folder_main.getNodeFromPath(path).getStructure());
     }
 }
