@@ -106,15 +106,15 @@ public class Dashboard {
 
         Folder main_folder = my_dashboard.getMain();
 
-        main_folder.add(lsea);
-        main_folder.add(mas);
+        main_folder.addChild(lsea);
+        main_folder.addChild(mas);
 
         // Add some example snippets.
-        lsea.add(new Snippet("Folder Add", "Java",
+        lsea.addChild(new Snippet("Folder Add", "Java",
                 "public void add(Node node) {\n" +
                 "    children.add(node);\n" +
                 "}"));
-        lsea.add(new Snippet("Snippet toString", "Java",
+        lsea.addChild(new Snippet("Snippet toString", "Java",
                 "@Override\n" +
                 "public String toString() {\n" +
                 "    return \"Snippet(\" + title + \")\";\n" +
@@ -169,7 +169,7 @@ public class Dashboard {
                         Node selected = ((Folder)current).getChildren().get(Integer.parseInt(response_arr[1]) - 1);
                         Node selected_copy = (Node) selected.clone();
                         selected_copy.setTitle(selected.getTitle() + "_copy");
-                        ((Folder) current).add(selected_copy);
+                        ((Folder) current).addChild(selected_copy);
                         break;
                 }
             } catch (NumberFormatException ex) {

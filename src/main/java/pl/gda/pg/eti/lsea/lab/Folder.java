@@ -34,6 +34,14 @@ public class Folder extends Node {
     //endregion
     
     //region Mutators
+    /**
+     * Adds Node as child of this Folder.
+     * @param node
+     */
+    public void addChild(Node node) {
+        children.add(node);
+        node.setParent(this);
+    }
     public Node removeChild(int index) {
         return children.remove(index);
     }
@@ -58,9 +66,9 @@ public class Folder extends Node {
         // ArrayList cloning constructor won't work here due to parent reference.
         ArrayList<Node> children_clone = new ArrayList<>(this.children.size());
         for (Node child : this.children) {
-            // Can't add directly to folder due to concurrent modification issues. :<
+            // Can't addChild directly to folder due to concurrent modification issues. :<
             Node child_clone = (Node) child.clone();
-            folder.add(child_clone);
+            folder.addChild(child_clone);
         }
         
         return folder;
@@ -127,15 +135,6 @@ public class Folder extends Node {
     }
 
     /**
-     * Adds Node as child of this Folder.
-     * @param node
-     */
-    public void add(Node node) {
-        children.add(node);
-        node.setParent(this);
-    }
-
-    /**
      * Creates and shows an example folder structure.
      * @param args 
      */
@@ -151,15 +150,15 @@ public class Folder extends Node {
         Folder folder_sub_b_b = new Folder("subB_B");
         Folder folder_sub_b_a_a = new Folder("subB_A_A");
 
-        folder_main.add(folder_sub_a);
-        folder_main.add(folder_sub_b);
-        folder_main.add(folder_sub_c);
+        folder_main.addChild(folder_sub_a);
+        folder_main.addChild(folder_sub_b);
+        folder_main.addChild(folder_sub_c);
 
-        folder_sub_c.add(folder_sub_c_a);
-        folder_sub_b.add(folder_sub_b_a);
-        folder_sub_b.add(folder_sub_b_b);
+        folder_sub_c.addChild(folder_sub_c_a);
+        folder_sub_b.addChild(folder_sub_b_a);
+        folder_sub_b.addChild(folder_sub_b_b);
 
-        folder_sub_b_a.add(folder_sub_b_a_a);
+        folder_sub_b_a.addChild(folder_sub_b_a_a);
 
         // Display example structure
         System.out.println(folder_main.getStructure());
