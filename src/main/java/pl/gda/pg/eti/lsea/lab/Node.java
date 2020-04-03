@@ -2,7 +2,7 @@ package pl.gda.pg.eti.lsea.lab;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.Date;
 
 /**
  * Abstract Node class representing every element within the file structure.
@@ -12,6 +12,8 @@ public abstract class Node implements Cloneable, Comparable<Node> {
     
     protected String title;  // name of the node
     protected Node parent = null;
+    protected Date created;
+    protected Date edited;
 
     //region Constructors
     public Node() {
@@ -19,6 +21,8 @@ public abstract class Node implements Cloneable, Comparable<Node> {
     }
     public Node(String title) {
         this.title = title;
+        this.created = new Date();
+        this.edited = this.created;
     }
     //endregion
 
