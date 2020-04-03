@@ -1,6 +1,8 @@
 package pl.gda.pg.eti.lsea.lab;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 
 /**
  * Abstract Node class representing every element within the file structure.
@@ -72,6 +74,29 @@ public abstract class Node implements Cloneable, Comparable<Node> {
      */
     protected String getStructure(int depth) {
         return "    ".repeat(depth) + "|-- " + title;
+    }
+    
+    /**
+     * Finds a full path for the current Node within a larger hierarchy.
+     * @return path to this Node as a String
+     */
+    public String getPath() {
+        return ((parent == null) ? "/" : parent.getPath()) + "/" + title;
+    }
+    
+    public Node getNodeFromPath(String path) {
+        String[] path_arr = path.split("/");
+        if (path_arr[0].isBlank())
+            path_arr = Arrays.copyOfRange(path_arr, 1, path_arr.length);
+        return getNodeFromPath(path_arr);
+    }
+    public Node getNodeFromPath(String[] path) {
+        Node out;
+        if (path.length == 0)
+            out = this;
+        else
+            out = null;
+        return out;
     }
     
     @Override
