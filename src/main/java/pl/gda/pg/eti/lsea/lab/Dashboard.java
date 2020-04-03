@@ -157,7 +157,7 @@ public class Dashboard {
                         current = ((Folder) current).getChildren().get(Integer.parseInt(response_arr[1]) - 1);
                         break;
                     case "del":
-                        ((Folder) current).getChildren().remove(Integer.parseInt(response_arr[1]) - 1);
+                        ((Folder) current).removeChild(Integer.parseInt(response_arr[1]) - 1);
                         break;
                     case "up":
                         Node parent = current.getParent();
