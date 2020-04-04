@@ -1,8 +1,11 @@
-package pl.gda.pg.eti.lsea.lab;
+package pl.gda.pg.eti.lsea.lab.cli;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Scanner;
+import pl.gda.pg.eti.lsea.lab.Folder;
+import pl.gda.pg.eti.lsea.lab.Node;
+import pl.gda.pg.eti.lsea.lab.Snippet;
 import pl.gda.pg.eti.lsea.lab.testing.RandomStructure;
 
 /**
