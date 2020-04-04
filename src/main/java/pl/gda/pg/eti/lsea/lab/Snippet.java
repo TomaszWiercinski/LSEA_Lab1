@@ -20,6 +20,7 @@ public class Snippet extends Node{
     public Snippet(String title, String lang) {
         super(title);
         this.lang = lang;
+        this.snippet = "";
     }
     //endregion
 
