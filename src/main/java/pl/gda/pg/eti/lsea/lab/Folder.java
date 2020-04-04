@@ -2,6 +2,7 @@ package pl.gda.pg.eti.lsea.lab;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import pl.gda.pg.eti.lsea.lab.testing.RandomStructure;
 
 /**
  * A Folder which can contain any number of other Nodes (other Folder or a 
@@ -165,7 +166,6 @@ public class Folder extends Node {
      */
     public static void main(String args[]){
         // Folder structure example
-        System.out.println("Example folder structure:");
         Folder folder_main = new Folder();
         Folder folder_sub_a = new Folder("subA");
         Folder folder_sub_b = new Folder("subB");
@@ -184,8 +184,21 @@ public class Folder extends Node {
         folder_sub_b.addChild(folder_sub_b_b);
 
         folder_sub_b_a.addChild(folder_sub_b_a_a);
+        
+        // Deep cloning example
+        try {
+            Folder folder_sub_b_clone = (Folder) folder_sub_b.clone();
+            folder_main.addChild(folder_sub_b_clone);
+            folder_sub_b_clone.setTitle("subB_copy"); // changed title of clone
+            folder_sub_b_clone.removeChild(0); // removed child from clone
+            folder_sub_b_clone.addChild(new Folder("subB_copy_new_child")); // added new child to clone
+            //further testing can be done via interactive dashboard
+        } catch (CloneNotSupportedException ex) {
+            System.out.println("This ain't Dolly, that's for sure.");
+        }
 
         // Display example structure
+        System.out.println("Example folder structure:");
         System.out.println(folder_main.getStructure());
 
         // Title search examples
@@ -197,15 +210,18 @@ public class Folder extends Node {
         
         // Path usage examples
         String path = "/subA";
-        System.out.println("\nContents of folder \"" + path + "\"");
+        System.out.println("\nContents of folder \"" + path + "\" (works without trailing slash)");
         System.out.println(folder_main.getNodeFromPath(path).getStructure());
         
         path = "subC/";
-        System.out.println("\nContents of folder \"" + path + "\"");
+        System.out.println("\nContents of folder \"" + path + "\" (works without leading slash)" );
         System.out.println(folder_main.getNodeFromPath(path).getStructure());
         
         path = "/subB/subB_A/";
         System.out.println("\nContents of folder \"" + path + "\"");
         System.out.println(folder_main.getNodeFromPath(path).getStructure());
+        
+        System.out.println("\nGetting path to node: " + folder_sub_b_a_a.toString());
+        System.out.println(folder_sub_b_a_a.getPath());
     }
 }
