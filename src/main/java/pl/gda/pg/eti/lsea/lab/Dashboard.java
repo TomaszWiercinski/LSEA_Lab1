@@ -3,6 +3,7 @@ package pl.gda.pg.eti.lsea.lab;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Scanner;
+import pl.gda.pg.eti.lsea.lab.testing.RandomStructure;
 
 /**
  * The point of contact between the user and the application. Currently only 
@@ -24,6 +25,12 @@ public class Dashboard {
      * @param snippet
      */
     public static void displaySnippet(Snippet snippet) {
+        // make sure the snippet isn't empty
+        if (snippet.get().isEmpty()) {
+            System.out.println("This snippet is empty.");
+            return;
+        }
+        
         // split text into lines
         String[] snippet_text = snippet.get().split("\n");
         
@@ -108,6 +115,12 @@ public class Dashboard {
 
         main_folder.addChild(lsea);
         main_folder.addChild(mas);
+        
+        // Random filler
+        RandomStructure rs = new RandomStructure(5, 4);
+        Folder random = rs.generate();
+        random.setTitle("RandomStructure");
+        main_folder.addChild(random);
 
         // Add some example snippets.
         lsea.addChild(new Snippet("Folder Add", "Java",
