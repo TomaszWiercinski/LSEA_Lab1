@@ -2,7 +2,6 @@ package pl.gda.pg.eti.lsea.lab;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import pl.gda.pg.eti.lsea.lab.testing.RandomStructure;
 
 /**
  * A Folder which can contain any number of other Nodes (other Folder or a 
@@ -26,6 +25,15 @@ public class Folder extends Node {
     //region Getters
     public ArrayList<Node> getChildren() {
         return children;
+    }
+    public Node getChild(int index) {
+        Node child = null;
+        
+        if (index >= 0 && index < this.children.size()) {
+            child = this.children.get(index);
+        }
+        
+        return child;
     }
     public Node getChildFromTitle(String title) {
         Node out = null;
