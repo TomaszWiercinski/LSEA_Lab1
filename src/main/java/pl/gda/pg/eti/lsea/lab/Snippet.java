@@ -85,6 +85,6 @@ public class Snippet extends Node{
 
     @Override
     public String toString() {
-        return "Snippet(" + title + ")";
+        return title + "." + lang;
     }
 }

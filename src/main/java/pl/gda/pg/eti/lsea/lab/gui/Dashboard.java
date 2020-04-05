@@ -1,49 +1,55 @@
 package pl.gda.pg.eti.lsea.lab.gui;
 
+import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.Scanner;
+import javax.swing.JEditorPane;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.WindowConstants;
-import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.TreeSelectionModel;
 import pl.gda.pg.eti.lsea.lab.FileTree;
-import static pl.gda.pg.eti.lsea.lab.FileTree.displayFolder;
-import static pl.gda.pg.eti.lsea.lab.FileTree.displaySnippet;
 import pl.gda.pg.eti.lsea.lab.Folder;
 import pl.gda.pg.eti.lsea.lab.Node;
 import pl.gda.pg.eti.lsea.lab.Snippet;
 import pl.gda.pg.eti.lsea.lab.testing.RandomStructure;
 
 /**
- *
+ * The point of contact between the user and the application.
  * @author Tomasz Wierciński
  */
-public class Dashboard extends JFrame {
+public class Dashboard extends JFrame implements TreeSelectionListener {
+    
     private JTree tree;
+    private JEditorPane label;
     
     public Dashboard(FileTree filetree) {
         super("Dashboard");
         
         tree = new JTree(filetree);
         JScrollPane treeView = new JScrollPane(tree);
+        tree.getSelectionModel().setSelectionMode
+            (TreeSelectionModel.SINGLE_TREE_SELECTION);
+        tree.addTreeSelectionListener(this);
+        
+        label = new JEditorPane();
+        
+        GridLayout experimentLayout = new GridLayout(1, 2);
+        this.setLayout(experimentLayout);
         
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.add(treeView);
+        this.add(label);
         this.pack();
         this.setVisible(true);
     }
     public Dashboard() {
-        super("Dashboard");
-        
-        FileTree filetree = new FileTree();
-        tree = new JTree(filetree);
-        JScrollPane treeView = new JScrollPane(tree);
-        
-        this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        this.add(treeView);
-        this.pack();
-        this.setVisible(true);
+        this(new FileTree());
     }
     
     public static void main(String[] args) {
@@ -77,5 +83,17 @@ public class Dashboard extends JFrame {
         
         Dashboard db = new Dashboard(file_tree);
         
+    }
+
+    @Override
+    public void valueChanged(TreeSelectionEvent e) {
+        Node node = (Node)tree.getLastSelectedPathComponent();
+
+        if (node == null)
+            return;
+
+        if (node instanceof Snippet) {
+            label.setText(((Snippet) node).get());
+        }
     }
 }

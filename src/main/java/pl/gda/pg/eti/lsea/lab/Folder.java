@@ -75,7 +75,7 @@ public class Folder extends Node {
      */
     @Override
     public String toString() {
-        return "Folder(" + title + ")";
+        return title;
     }
     
     @Override
