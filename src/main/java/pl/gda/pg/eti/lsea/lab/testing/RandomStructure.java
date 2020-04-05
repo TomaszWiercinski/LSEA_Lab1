@@ -55,4 +55,11 @@ public class RandomStructure {
         
         return folder;
     }
+    
+    public static void main(String[] args) {
+        RandomStructure rs = new RandomStructure(5, 5);
+        Folder folder_random = rs.generate();
+        folder_random.sort();
+        System.out.println(folder_random.getStructure());
+    }
 }
