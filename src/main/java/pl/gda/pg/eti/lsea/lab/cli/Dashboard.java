@@ -9,8 +9,8 @@ import pl.gda.pg.eti.lsea.lab.Snippet;
 import pl.gda.pg.eti.lsea.lab.testing.RandomStructure;
 
 /**
- * The point of contact between the user and the application. Currently only 
- * provides a command line interface for traversing an example file structure.
+ * The point of contact between the user and the application. Provides a command
+ * line interface for traversing an example file structure.
  * @author Tomasz Wierciński
  */
 public class Dashboard {
