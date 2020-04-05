@@ -2,6 +2,8 @@ package pl.gda.pg.eti.lsea.lab;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 
 /**
  * A Folder which can contain any number of other Nodes (other Folder or a 
@@ -68,6 +70,34 @@ public class Folder extends Node {
         return children.remove(child);
     }
     //endregion
+    
+    /**
+     * Sorts all nodes within a folder lexicographically. Uses title string to
+     * sort. Sorts recursively over all sub-folders.
+     */
+    public void sort() {
+        Collections.sort(children);
+        for (Node child : children) {
+            if (child instanceof Folder) {
+                ((Folder)child).sort();
+            }
+        }
+    }
+    
+    /**
+     * Sorts all nodes within a folder using provided comparator. Sorts 
+     * recursively over all sub-folders.
+     * @param <T>
+     * @param comparator 
+     */
+    public <T extends Comparator> void sort(T comparator) {
+        Collections.sort(children, comparator);
+        for (Node child : children) {
+            if (child instanceof Folder) {
+                ((Folder)child).sort(comparator);
+            }
+        }
+    }
     
     /**
      * {@inheritDoc}
@@ -183,13 +213,13 @@ public class Folder extends Node {
         Folder folder_sub_b_b = new Folder("subB_B");
         Folder folder_sub_b_a_a = new Folder("subB_A_A");
 
-        folder_main.addChild(folder_sub_a);
         folder_main.addChild(folder_sub_b);
         folder_main.addChild(folder_sub_c);
+        folder_main.addChild(folder_sub_a);
 
         folder_sub_c.addChild(folder_sub_c_a);
-        folder_sub_b.addChild(folder_sub_b_a);
         folder_sub_b.addChild(folder_sub_b_b);
+        folder_sub_b.addChild(folder_sub_b_a);
 
         folder_sub_b_a.addChild(folder_sub_b_a_a);
         
@@ -207,6 +237,11 @@ public class Folder extends Node {
 
         // Display example structure
         System.out.println("Example folder structure:");
+        System.out.println(folder_main.getStructure());
+        
+        // Display structure after sorting
+        folder_main.sort();
+        System.out.println("\nAfter sorting:");
         System.out.println(folder_main.getStructure());
 
         // Title search examples
