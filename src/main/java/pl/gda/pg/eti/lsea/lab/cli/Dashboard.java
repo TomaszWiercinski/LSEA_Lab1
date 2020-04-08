@@ -1,7 +1,11 @@
 package pl.gda.pg.eti.lsea.lab.cli;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Scanner;
+import pl.gda.pg.eti.lsea.lab.DateComparator;
 import pl.gda.pg.eti.lsea.lab.Folder;
 import pl.gda.pg.eti.lsea.lab.Node;
 import pl.gda.pg.eti.lsea.lab.Snippet;
@@ -20,32 +24,50 @@ public class Dashboard {
     enum ConsoleAction {
         MOVE("move [id]: Move to the Folder, or view the Snippet.") {
             @Override
-            void execute(Node current, String[] args) {
+            Node execute(Node current, String[] args) {
                 current = ((Folder) current).getChildren().get(Integer.parseInt(args[1]) - 1);
+                return current;
             }
         }, 
         UP("up: Move up in the structure.") {
             @Override
-            void execute(Node current, String[] args) {
+            Node execute(Node current, String[] args) {
                 Node parent = current.getParent();
                 if (parent != null) {
                     current = current.getParent();
                 }
+                return current;
             }
         }, 
-        DELETE("del [id]: Delete an element in structure.") {
+        DEL("del [id]: Delete an element in structure.") {
             @Override
-            void execute(Node current, String[] args) {
+            Node execute(Node current, String[] args) {
                 ((Folder) current).removeChild(Integer.parseInt(args[1]) - 1);
+                return current;
             }
         }, 
         COPY("copy [id]: Copy an element in structure.") {
             @Override
-            void execute(Node current, String[] args) throws CloneNotSupportedException  {
+            Node execute(Node current, String[] args) throws CloneNotSupportedException  {
                 Node selected = ((Folder)current).getChildren().get(Integer.parseInt(args[1]) - 1);
                 Node selected_copy = (Node) selected.clone();
                 selected_copy.setTitle(selected.getTitle() + "_copy");
                 ((Folder) current).addChild(selected_copy);
+                return current;
+            }
+        },
+        SORT("sort: Sort elements lexicographically.") {
+            @Override
+            Node execute(Node current, String[] argd) {
+                ((Folder) current).sort();
+                return current;
+            }
+        },
+        SORTDATE("sortDate: Sort elements based on date of creation.") {
+            @Override
+            Node execute(Node current, String[] args) {
+                ((Folder) current).sort(new DateComparator());
+                return current;
             }
         };
         
@@ -59,7 +81,7 @@ public class Dashboard {
         public String toString() {
             return this.desc;
         }
-        abstract void execute(Node current, String[] args) throws CloneNotSupportedException;
+        abstract Node execute(Node current, String[] args) throws CloneNotSupportedException;
     }
 
     private Folder main_folder = new Folder("Main");  // parent of all Folders and Snippets belonging to user
@@ -161,17 +183,26 @@ public class Dashboard {
 
         Folder lsea = new Folder("LSEA");
         Folder mas = new Folder("MAS");
-
-        Folder main_folder = my_dashboard.getMain();
-
-        main_folder.addChild(lsea);
-        main_folder.addChild(mas);
         
         // Random filler
         RandomStructure rs = new RandomStructure(5, 4);
         Folder random = rs.generate();
         random.setTitle("RandomStructure");
+        
+        Folder main_folder = my_dashboard.getMain();
         main_folder.addChild(random);
+        main_folder.addChild(mas);
+        main_folder.addChild(lsea);
+        
+        // Change dates to better show sorting by date
+        try {
+            SimpleDateFormat sdt = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+            random.setDateCreated(sdt.parse("30-07-1998 13:28"));
+            lsea.setDateCreated(new Date());
+            mas.setDateCreated(sdt.parse("01-12-2034 03:21"));
+        } catch (ParseException ex) {
+            System.out.println("Something went wrong while parsing dates!");
+        }
 
         // Add some example snippets.
         lsea.addChild(new Snippet("Folder Add", "Java",
@@ -195,26 +226,7 @@ public class Dashboard {
             // Perform selected action.
             String[] response_arr = response.split(" ");
             try {
-                switch (response_arr[0]) {
-                    case "move":
-                        current = ((Folder) current).getChildren().get(Integer.parseInt(response_arr[1]) - 1);
-                        break;
-                    case "del":
-                        ((Folder) current).removeChild(Integer.parseInt(response_arr[1]) - 1);
-                        break;
-                    case "up":
-                        Node parent = current.getParent();
-                        if (parent != null) {
-                            current = current.getParent();
-                        }
-                        break;
-                    case "copy":
-                        Node selected = ((Folder)current).getChildren().get(Integer.parseInt(response_arr[1]) - 1);
-                        Node selected_copy = (Node) selected.clone();
-                        selected_copy.setTitle(selected.getTitle() + "_copy");
-                        ((Folder) current).addChild(selected_copy);
-                        break;
-                }
+                current = ConsoleAction.valueOf(response_arr[0].toUpperCase()).execute(current, response_arr);
             } catch (NumberFormatException ex) {
                 System.out.println("Second argument must be a valid integer!");
             } catch (IndexOutOfBoundsException ex) {
@@ -223,6 +235,8 @@ public class Dashboard {
                 System.out.println("Command invalid within Snippet!");
             } catch (CloneNotSupportedException ex) {
                 System.out.println("Cloning not supported for selected Nodes!");
+            } catch (IllegalArgumentException ex) {
+                System.out.println("Command doesn't exist!");
             }
 
             // Check whether Node is Folder or Snippet to display valid commands and file structure/snippet.
@@ -242,7 +256,7 @@ public class Dashboard {
                 System.out.println("up: Exit snippet.");
             }
 
-            // Show valid options for all nodes.
+            // Show valid options outside of ConsoleAction
             System.out.println("exit: Quit the app.");
 
             // Wait for input.
