@@ -1,6 +1,5 @@
 package pl.gda.pg.eti.lsea.lab.cli;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Scanner;
 import pl.gda.pg.eti.lsea.lab.Folder;
@@ -14,6 +13,54 @@ import pl.gda.pg.eti.lsea.lab.testing.RandomStructure;
  * @author Tomasz Wierciński
  */
 public class Dashboard {
+    
+    /**
+     * Enum used to execute command line instructions.
+     */
+    enum ConsoleAction {
+        MOVE("move [id]: Move to the Folder, or view the Snippet.") {
+            @Override
+            void execute(Node current, String[] args) {
+                current = ((Folder) current).getChildren().get(Integer.parseInt(args[1]) - 1);
+            }
+        }, 
+        UP("up: Move up in the structure.") {
+            @Override
+            void execute(Node current, String[] args) {
+                Node parent = current.getParent();
+                if (parent != null) {
+                    current = current.getParent();
+                }
+            }
+        }, 
+        DELETE("del [id]: Delete an element in structure.") {
+            @Override
+            void execute(Node current, String[] args) {
+                ((Folder) current).removeChild(Integer.parseInt(args[1]) - 1);
+            }
+        }, 
+        COPY("copy [id]: Copy an element in structure.") {
+            @Override
+            void execute(Node current, String[] args) throws CloneNotSupportedException  {
+                Node selected = ((Folder)current).getChildren().get(Integer.parseInt(args[1]) - 1);
+                Node selected_copy = (Node) selected.clone();
+                selected_copy.setTitle(selected.getTitle() + "_copy");
+                ((Folder) current).addChild(selected_copy);
+            }
+        };
+        
+        private final String desc;
+        
+        ConsoleAction(String desc) {
+            this.desc = desc;
+        }
+        
+        @Override
+        public String toString() {
+            return this.desc;
+        }
+        abstract void execute(Node current, String[] args) throws CloneNotSupportedException;
+    }
 
     private Folder main_folder = new Folder("Main");  // parent of all Folders and Snippets belonging to user
 
@@ -104,7 +151,8 @@ public class Dashboard {
     }
 
     /**
-     * Creates an example folder structure with some snippets and allows you to check it out in the console.
+     * Creates an example folder structure with some snippets and allows you to 
+     * check it out in the console.
      * @param args
      */
     public static void main(String[] args) {
@@ -135,27 +183,6 @@ public class Dashboard {
                 "public String toString() {\n" +
                 "    return \"Snippet(\" + title + \")\";\n" +
                 "}"));
-
-        // Show the file structure.
-        System.out.println("File structure:");
-        System.out.println(main_folder.getStructure());
-
-        // Example title search and results.
-        System.out.println("\nTitle search for \"toString\":");
-        System.out.println(main_folder.searchTitle("toString"));
-
-        // Example content search and results.
-        System.out.println("\nContent search for \"@Override\":");
-        ArrayList<Node> results = main_folder.searchContent("@Override");
-        System.out.println(results);
-
-        System.out.println("\nResults:");
-        for (Node node : results) {
-            System.out.println(node.toString());
-            if (node instanceof Snippet) {
-                System.out.println(((Snippet) node).get());
-            }
-        }
 
         // Simple console app for traversing the folder structure and viewing snippets.
         String response = "";
@@ -203,10 +230,11 @@ public class Dashboard {
                 displayFolder(current);
 
                 // Show valid actions for folders.
-                System.out.println("\nmove [id]: Move to the Folder, or view the Snippet.");
-                System.out.println("del [id]: Delete an element in structure.");
-                System.out.println("copy [id]: Copy an element in structure.");
-                System.out.println("up: Move up in the structure.");
+                System.out.println();
+                for (ConsoleAction action : ConsoleAction.values()) {
+                    System.out.println(action.toString());
+                }
+                
             } else if (current instanceof Snippet) {
                 displaySnippet(current);
 
