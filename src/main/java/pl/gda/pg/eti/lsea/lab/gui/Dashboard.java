@@ -174,6 +174,13 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
         throw new UnsupportedOperationException("Not supported yet.");
     }
     
+    /**
+     * WORK IN PROGRESS
+     * 
+     * Displays an interactive dashboard with an example folder structure.
+     * 
+     * @param args 
+     */
     public static void main(String[] args) {
         // Make an example folder structure within the dashboard.
         FolderTree file_tree = new FolderTree();
@@ -205,6 +212,5 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
                 "}"));
         
         Dashboard db = new Dashboard(file_tree);
-        
     }
 }
