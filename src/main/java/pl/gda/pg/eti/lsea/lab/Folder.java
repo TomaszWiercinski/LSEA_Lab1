@@ -63,9 +63,21 @@ public class Folder extends Node {
         children.add(node);
         node.setParent(this);
     }
+    
+    /**
+     * Removes child node with picked index.
+     * @param index child index
+     * @return removed child Node
+     */
     public Node removeChild(int index) {
         return children.remove(index);
     }
+    
+    /**
+     * Removes passed child node from list of children.
+     * @param child child Node to be removed
+     * @return true if the child Node was removed
+     */
     public boolean removeChild(Node child) {
         return children.remove(child);
     }
