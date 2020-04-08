@@ -85,10 +85,10 @@ public class Folder extends Node {
     }
     
     /**
-     * Sorts all nodes within a folder using provided comparator. Sorts 
-     * recursively over all sub-folders.
-     * @param <T>
-     * @param comparator 
+     * Sorts all nodes within a folder using provided Comparator implementation.
+     * Sorts recursively over all sub-folders.
+     * @param <T> implementation of Comparator interface
+     * @param comparator provided Comparator
      */
     public <T extends Comparator> void sort(T comparator) {
         Collections.sort(children, comparator);
