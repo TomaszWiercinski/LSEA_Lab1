@@ -47,12 +47,6 @@ public class Folder extends Node {
         return out;
     }
     //endregion
-
-    //region Setters
-    public void setChildren(ArrayList<Node> children) {
-        this.children = children;
-    }
-    //endregion
     
     //region Mutators
     /**
