@@ -24,7 +24,7 @@ public abstract class Node implements Cloneable, Comparable<Node> {
     public Node(String title) {
         this.title = title;
         this.created = new Date();
-        this.edited = this.created;
+        this.edited = (Date) this.created.clone();
     }
     //endregion
 
@@ -46,9 +46,16 @@ public abstract class Node implements Cloneable, Comparable<Node> {
     //region Setters
     public void setTitle(String title) {
         this.title = title;
+        this.edited = new Date();
     }
     public void setParent(Node parent) {
         this.parent = parent;
+    }
+    public void setDateCreated(Date created) {
+        this.created = created;
+    }
+    public void setDateEdited(Date edited) {
+        this.edited = edited;
     }
     //endregion
 
