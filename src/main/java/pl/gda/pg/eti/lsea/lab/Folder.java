@@ -82,6 +82,7 @@ public class Folder extends Node {
      * sort. Sorts recursively over all sub-folders.
      */
     public void sort() {
+        // Comparable implementation usage
         Collections.sort(children);
         for (Node child : children) {
             if (child instanceof Folder) {
@@ -97,6 +98,7 @@ public class Folder extends Node {
      * @param comparator provided Comparator
      */
     public <T extends Comparator> void sort(T comparator) {
+        // Comparator implementation usage
         Collections.sort(children, comparator);
         for (Node child : children) {
             if (child instanceof Folder) {
@@ -114,13 +116,19 @@ public class Folder extends Node {
         return title;
     }
     
+    /**
+     * Deep cloning implementation.
+     * @see pl.gda.pg.eti.lsea.lab.Snippet#clone
+     * @see pl.gda.pg.eti.lsea.lab.Node#clone
+     */
     @Override
     public Folder clone() throws CloneNotSupportedException {
         Folder folder = new Folder(this.title);
         
-        // ArrayList cloning constructor won't work here due to parent reference.
+        // Clone all child nodes (this should work recursively).
         ArrayList<Node> children_clone = new ArrayList<>(this.children.size());
         for (Node child : this.children) {
+            
             // Can't addChild directly to folder due to concurrent modification issues. :<
             Node child_clone = (Node) child.clone();
             folder.addChild(child_clone);

@@ -43,6 +43,11 @@ public class Snippet extends Node{
     }
     //endregion
 
+    /**
+     * Deep cloning implementation.
+     * @see pl.gda.pg.eti.lsea.lab.Folder#clone
+     * @see pl.gda.pg.eti.lsea.lab.Node#clone
+     */
     @Override
     public Object clone() {
         Snippet snippet = new Snippet(this.title, this.lang, this.snippet);

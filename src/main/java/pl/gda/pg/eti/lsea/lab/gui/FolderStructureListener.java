@@ -29,12 +29,12 @@ public class FolderStructureListener implements TreeModelListener {
 
     @Override
     public void treeNodesRemoved(TreeModelEvent e) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public void treeStructureChanged(TreeModelEvent e) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
     
 }

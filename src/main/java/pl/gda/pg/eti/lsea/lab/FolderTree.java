@@ -7,6 +7,8 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 /**
+ * WORK IN PROGRESS
+ * 
  * Handles tree structure containing Snippets and Folders. Implements TreeModel.
  * Used to display the structure with {@link javax.swing.JTree}.
  * 

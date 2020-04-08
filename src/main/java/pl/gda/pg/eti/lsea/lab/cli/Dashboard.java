@@ -19,7 +19,9 @@ import pl.gda.pg.eti.lsea.lab.testing.RandomStructure;
 public class Dashboard {
     
     /**
-     * Enum used to execute command line instructions.
+     * Enum usage.
+     * Used to execute command line instructions. Makes it super easy to add new
+     * console commands.
      */
     enum ConsoleAction {
         MOVE("move [id]: Move to the Folder, or view the Snippet.") {
@@ -50,6 +52,7 @@ public class Dashboard {
             @Override
             Node execute(Node current, String[] args) throws CloneNotSupportedException  {
                 Node selected = ((Folder)current).getChildren().get(Integer.parseInt(args[1]) - 1);
+                // Deep cloning usage.
                 Node selected_copy = (Node) selected.clone();
                 selected_copy.setTitle(selected.getTitle() + "_copy");
                 ((Folder) current).addChild(selected_copy);
@@ -59,6 +62,7 @@ public class Dashboard {
         SORT("sort: Sort elements lexicographically.") {
             @Override
             Node execute(Node current, String[] argd) {
+                // Comparable implementation usage
                 ((Folder) current).sort();
                 return current;
             }
@@ -66,6 +70,7 @@ public class Dashboard {
         SORTDATE("sortDate: Sort elements based on date of creation.") {
             @Override
             Node execute(Node current, String[] args) {
+                // Comparator implementation usage
                 ((Folder) current).sort(new DateComparator());
                 return current;
             }

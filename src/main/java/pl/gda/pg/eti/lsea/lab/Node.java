@@ -123,6 +123,11 @@ public abstract class Node implements Cloneable, Comparable<Node> {
         return out;
     }
     
+    /**
+     * Implementation in Folder and Snippet
+     * @see pl.gda.pg.eti.lsea.lab.Folder#clone
+     * @see pl.gda.pg.eti.lsea.lab.Snippet#clone
+     */
     @Override
     public abstract Object clone() throws CloneNotSupportedException;
     public abstract ArrayList<Node> searchTitle(String term);
