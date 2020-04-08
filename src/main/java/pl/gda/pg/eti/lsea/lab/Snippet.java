@@ -1,6 +1,7 @@
 package pl.gda.pg.eti.lsea.lab;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 /**
  * Node within the file structure containing a String - snippet of code.
@@ -34,9 +35,11 @@ public class Snippet extends Node{
     //region Setters
     public void set(String snippet) {
         this.snippet = snippet;
+        this.edited = new Date();
     }
     public void setLang(String lang) {
         this.lang = lang;
+        this.edited = new Date();
     }
     //endregion
 
