@@ -10,11 +10,13 @@ import java.util.Date;
  */
 public abstract class Node implements Cloneable, Comparable<Node> {
     
+    // region Fields
     protected String title;  // name of the node
-    protected Node parent = null;
-    protected Date created;
-    protected Date edited;
-
+    protected Node parent = null; // parent Node
+    protected Date created; // date of creation of this Node
+    protected Date edited; // date of last edit
+    //endregion
+    
     //region Constructors
     public Node() {
         this("Untitled");
@@ -32,6 +34,12 @@ public abstract class Node implements Cloneable, Comparable<Node> {
     }
     public Node getParent() {
         return parent;
+    }
+    public Date getDateCreated() {
+        return created;
+    }
+    public Date getDateEdited() {
+        return edited;
     }
     //endregion
 
