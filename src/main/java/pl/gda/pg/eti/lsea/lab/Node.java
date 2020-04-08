@@ -85,7 +85,12 @@ public abstract class Node implements Cloneable, Comparable<Node> {
      * @return path to this Node as a String
      */
     public String getPath() {
-        return ((parent != null) ? parent.getPath() + "/" + title : "");
+        return ((parent != null) ? parent.getPath() + "/" : "") + title;
+    }
+    public String[] getPathArray() {
+        String path_str = getPath();
+        String[] path_arr = path_str.split("/");
+        return path_arr;
     }
     
     public Node getNodeFromPath(String path) {
