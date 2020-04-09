@@ -123,8 +123,21 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
         
         menu_edit.add(menu_edit_sort);
         menu_edit.add(menu_edit_add);
+
+        // Search
+        JMenu menu_search = new JMenu("Search");
+        menu_search.setMnemonic(KeyEvent.VK_S);
+        menu_search.getAccessibleContext().setAccessibleDescription("Search menu");
+
+        // Edit -> Copy
+        JMenuItem menu_search_title = new JMenuItem("By title");
+        menu_search_title.setMnemonic(KeyEvent.VK_T);
+        menu_search_title.getAccessibleContext().setAccessibleDescription("Search by title");
+        menu_search_title.addActionListener(this);
+        menu_search.add(menu_search_title);
         
         menu_bar.add(menu_edit);
+        menu_bar.add(menu_search);
 
         // Layout
         border_layout = new BorderLayout();
@@ -179,7 +192,7 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
             node = (Node)node_path.getLastPathComponent();
         
         switch (s) {
-            case "Copy":
+            case "Copy": // Deep cloning implementation usage
                 if (node == null)
                     break;
                 try {
@@ -205,7 +218,7 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
                     break;
                 tree.startEditingAtPath(node_path);
                 break;
-            case "By name":
+            case "By name": // Comparable implementation usage
                 if (node == null)
                     tree_model.sortChildren((Folder) tree_model.getRoot());
                 else if (node instanceof Folder) {
@@ -213,7 +226,7 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
                     tree_model.sortChildren(node_folder);
                 }
                 break;
-            case "By date":
+            case "By date": // Comparator implementation usage
                 if (node == null)
                     tree_model.sortChildren((Folder) tree_model.getRoot(), new DateComparator());
                 else if (node instanceof Folder) {
@@ -234,6 +247,11 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
                 else if (node instanceof  Folder) {
                     tree_model.insertNodeInto(new Snippet("New Snippet", "java"), (Folder) node);
                 }
+                break;
+            case "By title":
+                String term = JOptionPane.showInputDialog(this, "Type search term:");
+                if (term != null && !term.isBlank())
+                    System.out.println(((Folder)tree_model.getRoot()).searchTitle(term));
                 break;
         }
     } 
