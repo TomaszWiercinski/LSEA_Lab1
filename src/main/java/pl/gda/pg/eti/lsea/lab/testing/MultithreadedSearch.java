@@ -19,7 +19,6 @@ public class MultithreadedSearch {
     private ArrayList<Node> results; // results of search - list of found Nodes
     private ArrayList<Node> list; // list of Nodes to search in
     private String term; // search term
-    ExecutorService dynamic_executor; // pool of threads
 
     //region Constructors
     public MultithreadedSearch(String term, ArrayList<Node> list) {
@@ -30,8 +29,6 @@ public class MultithreadedSearch {
         this.term = term;
         this.list = list;
         results = new ArrayList<>();
-        dynamic_executor = new ThreadPoolExecutor(1, max_threads, 60, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>());
     }
     //endregion
 
@@ -43,7 +40,9 @@ public class MultithreadedSearch {
 
     public void search() {
 
-        List<Future> futures = new ArrayList<>();
+        List<Future> futures = new ArrayList<>(); // list of futures for each thread in pool
+        ExecutorService dynamic_executor; // pool of threads
+        ArrayList<Long> times = new ArrayList<Long>(); // list of times for each thread number
 
         int size; // size of sublist
         ArrayList<List<Node>> sublists = new ArrayList<>(); // list of sublists
@@ -63,6 +62,10 @@ public class MultithreadedSearch {
 
             System.out.println("INFO: Created " + sublists.size() + " sublists.");
 
+            // new pool
+            dynamic_executor = new ThreadPoolExecutor(i, i, 60, TimeUnit.SECONDS,
+                    new LinkedBlockingQueue<>());
+
             // add all threads to pool
             for (int j = 0; j < i; j++) {
                 futures.add(dynamic_executor.submit(new Thread(new SearchRunnable(sublists.get(j)))));
@@ -74,6 +77,8 @@ public class MultithreadedSearch {
                 for (Future f : futures) {
                     f.get();
                 }
+                dynamic_executor.shutdown();
+                dynamic_executor.awaitTermination(60, TimeUnit.SECONDS);
             } catch (InterruptedException ex) {
                 System.out.println("EXCEPTION: InterruptedException!");
             } catch (ExecutionException ex) {
@@ -82,9 +87,11 @@ public class MultithreadedSearch {
             long end = System.currentTimeMillis();
             long duration = end-start;
 
-            System.out.println("INFO: Found: " + results);
-            System.out.println("INFO: Time taken: " + duration);
+            System.out.println("INFO: Found " + results.size() + " elements.");
+            System.out.println("INFO: Time taken: " + duration + " milliseconds");
+            times.add(duration);
         }
+        System.out.println("INFO: List of times taken: " + times);
     }
 
 
@@ -106,5 +113,22 @@ public class MultithreadedSearch {
                     addNode(node);
             }
         }
+    }
+
+    /**
+     * Tests multithreaded search on a large randomly generated file structure.
+     * @param args
+     */
+    static public void main(String[] args) {
+        Folder root_folder = new Folder("Root");
+        RandomStructure rs = new RandomStructure(10, 5);
+
+        System.out.println("INFO: Generating random folder structure");
+        for (int i = 0; i < 1000; i++) {
+            root_folder.addChild(rs.generate());
+        }
+
+        MultithreadedSearch ms = new MultithreadedSearch(10, "Cube", root_folder.getAllChildren());
+        ms.search();
     }
 }
