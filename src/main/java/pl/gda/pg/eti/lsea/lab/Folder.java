@@ -285,28 +285,5 @@ public class Folder extends Node {
         folder_main.sort();
         System.out.println("\nAfter sorting:");
         System.out.println(folder_main.getStructure());
-
-        // Title search examples
-        System.out.println("\nSearch results for term \"sub\":");
-        System.out.println(folder_main.searchTitle("sub"));
-
-        System.out.println("\nSearch results for term \"A\" (not case-sensitive):");
-        System.out.println(folder_main.searchTitle("A"));
-        
-        // Path usage examples
-        String path = "/subA";
-        System.out.println("\nContents of folder \"" + path + "\" (works without trailing slash)");
-        System.out.println(folder_main.getNodeFromPath(path).getStructure());
-        
-        path = "subC/";
-        System.out.println("\nContents of folder \"" + path + "\" (works without leading slash)" );
-        System.out.println(folder_main.getNodeFromPath(path).getStructure());
-        
-        path = "/subB/subB_A/";
-        System.out.println("\nContents of folder \"" + path + "\"");
-        System.out.println(folder_main.getNodeFromPath(path).getStructure());
-        
-        System.out.println("\nGetting path to node: " + folder_sub_b_a_a.toString());
-        System.out.println(folder_sub_b_a_a.getPath());
     }
 }
