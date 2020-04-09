@@ -19,7 +19,23 @@ import pl.gda.pg.eti.lsea.lab.testing.RandomStructure;
 
 /**
  * The point of contact between the user and the application.
- * 
+ *
+ * Uses:
+ * Deep cloning
+ *  - non-interactive example in {@link Folder#main(String[])}
+ * Multithreading
+ *  - better example and implementation in {@link MultithreadedSearch}
+ * Sorting with a Comparable
+ *  - implementation in {@link Node#compareTo(Node)}
+ *  - non-interactive example in {@link Folder#main(String[])}
+ * Sorting with a Comparator
+ *  - implementation in {@link DateComparator}
+ *  - comparator sorts based on date of last edit, renaming nodes counts as editing
+ *
+ * Used elsewhere:
+ * enum
+ *  - implementation and usage in {@link pl.gda.pg.eti.lsea.lab.cli.Dashboard}
+ *
  * @author Tomasz Wierciński
  */
 public class Dashboard extends JFrame implements TreeSelectionListener, ActionListener {
@@ -36,7 +52,8 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
     private JLabel label_date = new JLabel(""); // date of creation of selected Node
 
     private static final SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss a"); // date format used in dashboard
-    
+
+    //region Constructors
     public Dashboard(FolderTree filetree) {
         super("Dashboard");
         
@@ -162,11 +179,16 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
     public Dashboard() {
         this(new FolderTree());
     }
-    
+    //endregion
+
+    /**
+     * {@inheritDoc} Sets the two labels at the bottom of the GUI to the title and date of creation of selected Node.
+     * @param e the event that characterizes the change.
+     */
     @Override
     public void valueChanged(TreeSelectionEvent e) {
         Node node = (Node)tree.getLastSelectedPathComponent();
-        String label_title_str = "-";
+        String label_title_str = " -";
         String label_date_str = "";
 
         // Make sure a node is selected.
@@ -183,75 +205,95 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
         label_title.setText(label_title_str);
         label_date.setText(label_date_str);
     }
-    
+
+    /**
+     * {@inheritDoc} Performs appropriate action in response to a selected menu bar item.
+     * TODO: Simplify! Maybe use an enum? Like in {@link pl.gda.pg.eti.lsea.lab.cli.Dashboard}.
+     * @param e the event to be processed.
+     */
     @Override
-    public void actionPerformed(ActionEvent e) { 
+    public void actionPerformed(ActionEvent e) {
+        // Get action and related Node + TreePath.
         String s = e.getActionCommand();
         TreePath node_path = tree.getSelectionPath();
         Node node = null;
         if (node_path != null)
             node = (Node)node_path.getLastPathComponent();
-        
+
+        // The big switch
         switch (s) {
-            case "Copy": // Deep cloning implementation usage
+            // Copy the selected node and insert in the same folder as old_title + "_copy".
+            case "Copy":
                 if (node == null)
                     break;
                 try {
                     System.out.println("INFO: Creating copy of " + node.getPath());
+
+                    // Create a copy of selected node - deep cloning implementation usage.
                     Node node_copy = (Node) node.clone();
                     Folder node_parent = (Folder) node.getParent();
                     node_copy.setTitle(node.getTitle() + "_copy");
+
+                    // Insert copy into structure.
                     tree_model.insertNodeInto(node_copy, node_parent);
-                    tree.repaint();
                 } catch (CloneNotSupportedException ex) {
-                    System.out.println("Something went wrong!");
+                    System.out.println("EXCEPTION: This ain't Dolly, that's for sure.");
                 }
                 break;
+            // Remove selected node from the structure.
             case "Delete":
-                if (node == null)
-                    break;
+                if (node == null) break;
                 System.out.println("INFO: Deleting " + node.getPath());
                 Folder node_parent = (Folder) node.getParent();
                 tree_model.removeChild(node, node_parent);
                 break;
+            // Rename the selected node (can also be done via triple click).
             case "Rename":
-                if (node == null)
-                    break;
+                if (node == null) break;
                 tree.startEditingAtPath(node_path);
                 break;
-            case "By name": // Comparable implementation usage
-                if (node == null)
+            // Sort nodes within the selected folder lexicographically.
+            case "By name":
+                if (node == null) // if no node selected, sort at root folder
                     tree_model.sortChildren((Folder) tree_model.getRoot());
                 else if (node instanceof Folder) {
                     Folder node_folder = (Folder) node;
+                    // Comparable implementation usage.
                     tree_model.sortChildren(node_folder);
                 }
                 break;
-            case "By date": // Comparator implementation usage
-                if (node == null)
+            // Sort nodes within the selected folder based on creation date.
+            case "By date":
+                if (node == null) // if no node selected, sort at root folder
                     tree_model.sortChildren((Folder) tree_model.getRoot(), new DateComparator());
                 else if (node instanceof Folder) {
                     Folder node_folder = (Folder) node;
+                    // Comparator implementation usage.
                     tree_model.sortChildren(node_folder, new DateComparator());
                 }
                 break;
+            // Insert a new folder into the selected folder.
             case "Folder":
-                if (node == null)
+                if (node == null) // if no node selected, insert into root folder
                     tree_model.insertNodeInto(new Folder("New Folder"), (Folder) tree_model.getRoot());
                 else if (node instanceof  Folder) {
                     tree_model.insertNodeInto(new Folder("New Folder"), (Folder) node);
                 }
                 break;
+            // Insert a new snippet into the selected folder.
             case "Snippet":
-                if (node == null)
+                if (node == null) // if no node selected, insert into root folder
                     tree_model.insertNodeInto(new Snippet("New Snippet", "java"), (Folder) tree_model.getRoot());
                 else if (node instanceof  Folder) {
                     tree_model.insertNodeInto(new Snippet("New Snippet", "java"), (Folder) node);
                 }
                 break;
+            // Search the entire structure by title.
             case "By title":
+                // Pop-up asking for search term.
                 String term = JOptionPane.showInputDialog(this, "Type search term:");
                 if (term != null && !term.isBlank()) {
+                    // example multithreading usage / implementation - for more information inquire within MultithreadedSearch.java
                     MultithreadedSearch search = new MultithreadedSearch(5, term, ((Folder)tree_model.getRoot()).getAllChildren());
                     search.search();
                 }
@@ -292,7 +334,8 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
                 "public String toString() {\n" +
                 "    return \"Snippet(\" + title + \")\";\n" +
                 "}"));
-        
+
+        // Create and display GUI.
         Dashboard db = new Dashboard(file_tree);
     }
 }

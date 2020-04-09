@@ -5,7 +5,7 @@ import javax.swing.event.TreeModelListener;
 import pl.gda.pg.eti.lsea.lab.Node;
 
 /**
- * Listener for all changes related to the folder structure.
+ * Listener for all changes related to the folder structure. Currently, only prints out messages.
  * 
  * @author Tomasz Wierciński
  */
