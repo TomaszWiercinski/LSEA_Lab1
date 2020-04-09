@@ -24,8 +24,6 @@ import pl.gda.pg.eti.lsea.lab.Snippet;
 import pl.gda.pg.eti.lsea.lab.testing.RandomStructure;
 
 /**
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ WORK IN PROGRESS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * 
  * The point of contact between the user and the application.
  * 
  * @author Tomasz Wierciński
@@ -166,8 +164,6 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
     } 
     
     /**
-     * ~~~~~~~~~~~~~~~~~~~~~~~~~~~ WORK IN PROGRESS ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     * 
      * Displays an interactive dashboard with an example folder structure.
      * 
      * @param args 
