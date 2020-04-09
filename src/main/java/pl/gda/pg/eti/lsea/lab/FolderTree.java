@@ -1,6 +1,7 @@
 package pl.gda.pg.eti.lsea.lab;
 
-import java.util.ArrayList;
+import java.util.EventListener;
+import javax.swing.event.EventListenerList;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
@@ -17,10 +18,12 @@ import javax.swing.tree.TreePath;
 public class FolderTree implements TreeModel {
 
     //region Fields
+    
     // parent of all Folders and Snippets belonging to user
     private Folder root_folder = new Folder("Root");
     // list of all tree model listeners
-    private ArrayList<TreeModelListener> listeners = new ArrayList<>(); 
+    private EventListenerList listener_list = new EventListenerList(); 
+    
     //endregion
 
     /**
@@ -91,8 +94,8 @@ public class FolderTree implements TreeModel {
 
     @Override
     public void addTreeModelListener(TreeModelListener l) {
-        System.out.println("INFO: Adding tree model listener " + l);
-        this.listeners.add(l);
+        System.out.println("INFO: Adding tree model listener " + l.getClass().getCanonicalName());
+        listener_list.add(TreeModelListener.class, l);
     }
 
     /**
@@ -103,7 +106,7 @@ public class FolderTree implements TreeModel {
     @Override
     public void removeTreeModelListener(TreeModelListener l) {
         System.out.println("INFO: Removing tree model listener " + l);
-        this.listeners.remove(l);
+        this.listener_list.remove(TreeModelListener.class, l);
     }
     
     /**
@@ -112,23 +115,47 @@ public class FolderTree implements TreeModel {
      * @param child child Node
      * @param parent parent Node, Folder
      */
-    public void insertNodeInto(Node child, Folder parent) {
+    public void insertNodeInto(Node child, Folder parent) {     
         parent.addChild(child);
         
-        TreePath path = new TreePath(parent.getPathArray());
-        int[] child_indices = {parent.getChildren().size()-1};
+        TreePath path = parent.getPathArray();
+        int[] child_indices = {parent.getChildren().indexOf(child)};
         Object[] children = {child};
         
+        System.out.println(path.getLastPathComponent());
+        
         TreeModelEvent e = new TreeModelEvent(this, path, child_indices, children);
-        for (TreeModelListener l : listeners) {
-            
-            l.treeNodesInserted(new TreeModelEvent(this, path, child_indices, children));
-            System.out.println(e + ";" + l);
-        }
+        EventListener[] listeners = listener_list.getListeners(TreeModelListener.class);
+        for (int i = 0; i < listeners.length; i++)
+           ((TreeModelListener) listeners[i]).treeNodesInserted(e);
+    }
+    
+    public void removeChild(Node child, Folder parent) {
+        // The documentation for TreePath is so bad, oh my gooooooooooooood
+        TreePath path = parent.getPathArray();
+        int[] child_indices = {parent.getChildren().indexOf(child)};
+        Object[] children = {child};
+        
+        parent.removeChild(child);
+        
+        TreeModelEvent e = new TreeModelEvent(this, path, child_indices, children);
+        EventListener[] listeners = listener_list.getListeners(TreeModelListener.class);
+        for (int i = 0; i < listeners.length; i++)
+           ((TreeModelListener) listeners[i]).treeNodesRemoved(e);
     }
     
     @Override
     public void valueForPathChanged(TreePath path, Object newValue) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        System.out.println("INFO: Changing node at path " + path.toString());
+        Node node = (Node)path.getLastPathComponent();
+        node.setTitle(newValue.toString());
+    }
+    
+    protected void fireTreeStructureChanged(Object oldRoot)
+    {
+        TreeModelEvent event = new TreeModelEvent(this, new Object[] { oldRoot });
+        EventListener[] listeners = listener_list.getListeners(TreeModelListener.class);
+        for (int i = 0; i < listeners.length; i++)
+            ((TreeModelListener) listeners[i]).treeStructureChanged(event);
     }
 }

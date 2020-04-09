@@ -30,11 +30,13 @@ import pl.gda.pg.eti.lsea.lab.testing.RandomStructure;
  * 
  * @author Tomasz Wierciński
  */
-public class Dashboard extends JFrame implements TreeSelectionListener, ActionListener, TreeModelListener {
+public class Dashboard extends JFrame implements TreeSelectionListener, ActionListener {
     
     private JTree tree;
     private FolderTree tree_model;
+    private JScrollPane tree_view;
     private JEditorPane snippet;
+    private JScrollPane snippet_view;
     private JMenuBar menu_bar;
     
     public Dashboard(FolderTree filetree) {
@@ -48,10 +50,11 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
         tree.addTreeSelectionListener(this);
         tree.setEditable(true);
         tree.setRootVisible(false);
-        JScrollPane treeView = new JScrollPane(tree);
+        tree_view = new JScrollPane(tree);
         
         // Snippet editor pane
         snippet = new JEditorPane();
+        snippet_view = new JScrollPane(snippet);
         
         // Layout
         GridLayout experimentLayout = new GridLayout(1, 2);
@@ -112,8 +115,8 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
         this.setSize(400, 300);
         this.setJMenuBar(menu_bar);
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        this.add(treeView);
-        this.add(snippet);
+        this.add(tree_view);
+        this.add(snippet_view);
         this.pack();
         this.setVisible(true);
     }
@@ -135,10 +138,10 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
     @Override
     public void actionPerformed(ActionEvent e) { 
         String s = e.getActionCommand();
+        Node node = (Node)tree.getLastSelectedPathComponent();
         
         switch (s) {
             case "Copy":
-                Node node = (Node)tree.getLastSelectedPathComponent();
                 if (node == null)
                     break;
                 try {
@@ -151,28 +154,16 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
                 } catch (CloneNotSupportedException ex) {
                     System.out.println("Something went wrong!");
                 }
+                break;
+            case "Delete":
+                if (node == null)
+                    break;
+                System.out.println("INFO: Deleting " + node.getPath());
+                Folder node_parent = (Folder) node.getParent();
+                tree_model.removeChild(node, node_parent);
+                break;
         }
     } 
-    
-    @Override
-    public void treeNodesChanged(TreeModelEvent e) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    
-    @Override
-    public void treeNodesInserted(TreeModelEvent e) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void treeNodesRemoved(TreeModelEvent e) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void treeStructureChanged(TreeModelEvent e) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
     
     /**
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~ WORK IN PROGRESS ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -184,7 +175,6 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
     public static void main(String[] args) {
         // Make an example folder structure within the dashboard.
         FolderTree file_tree = new FolderTree();
-        //file_tree.addTreeModelListener(new FolderStructureListener());
 
         Folder lsea = new Folder("LSEA");
         Folder mas = new Folder("MAS");

@@ -3,6 +3,7 @@ package pl.gda.pg.eti.lsea.lab;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import javax.swing.tree.TreePath;
 
 /**
  * Abstract Node class representing every element within the file structure.
@@ -102,10 +103,14 @@ public abstract class Node implements Cloneable, Comparable<Node> {
     public String getPath() {
         return ((parent != null) ? parent.getPath() + "/" : "") + title;
     }
-    public String[] getPathArray() {
-        String path_str = getPath();
-        String[] path_arr = path_str.split("/");
-        return path_arr;
+    public TreePath getPathArray() {
+        TreePath path;
+        if (parent == null)
+            path = new TreePath(this);
+        else {
+            path = parent.getPathArray().pathByAddingChild(this);
+        }
+        return path;
     }
     
     public Node getNodeFromPath(String path) {
