@@ -18,10 +18,8 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
-import pl.gda.pg.eti.lsea.lab.FolderTree;
-import pl.gda.pg.eti.lsea.lab.Folder;
-import pl.gda.pg.eti.lsea.lab.Node;
-import pl.gda.pg.eti.lsea.lab.Snippet;
+
+import pl.gda.pg.eti.lsea.lab.*;
 import pl.gda.pg.eti.lsea.lab.testing.RandomStructure;
 
 /**
@@ -31,18 +29,19 @@ import pl.gda.pg.eti.lsea.lab.testing.RandomStructure;
  */
 public class Dashboard extends JFrame implements TreeSelectionListener, ActionListener {
     
-    private JTree tree;
-    private FolderTree tree_model;
-    private JScrollPane tree_view;
-    private JEditorPane snippet;
-    private JScrollPane snippet_view;
-    private JMenuBar menu_bar;
+    private JTree tree; // JTree component - displays the tree
+    private FolderTree tree_model; // TreeModel - manages tree structure
+    private JScrollPane tree_view; // left JScrollPane for JTree
+    private JEditorPane snippet; // displays snippet
+    private JScrollPane snippet_view; // right JScrollPane for snippet
+    private JMenuBar menu_bar; // the dashboard menu bar
     
     public Dashboard(FolderTree filetree) {
         super("Dashboard");
         
         // Tree scroll pane
         tree_model = filetree;
+        tree_model.addTreeModelListener(new FolderStructureListener());
         tree = new JTree(tree_model);
         tree.getSelectionModel().setSelectionMode
             (TreeSelectionModel.SINGLE_TREE_SELECTION);
@@ -51,7 +50,7 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
         tree.setRootVisible(false);
         tree_view = new JScrollPane(tree);
         
-        // Snippet editor pane
+        // Snippet scroll pane
         snippet = new JEditorPane();
         snippet_view = new JScrollPane(snippet);
         
@@ -166,6 +165,23 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
                 if (node == null)
                     break;
                 tree.startEditingAtPath(node_path);
+            case "By name":
+                if (node == null)
+                    tree_model.sortChildren((Folder) tree_model.getRoot());
+                else if (node instanceof Folder) {
+                    Folder node_folder = (Folder) node;
+                    tree_model.sortChildren(node_folder);
+                }
+                break;
+            case "By date":
+                if (node == null)
+                    tree_model.sortChildren((Folder) tree_model.getRoot(), new DateComparator());
+                else if (node instanceof Folder) {
+                    Folder node_folder = (Folder) node;
+                    tree_model.sortChildren(node_folder, new DateComparator());
+                }
+                break;
+
         }
     } 
     

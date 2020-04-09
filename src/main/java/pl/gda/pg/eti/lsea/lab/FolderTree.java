@@ -1,5 +1,6 @@
 package pl.gda.pg.eti.lsea.lab;
 
+import java.util.Comparator;
 import java.util.EventListener;
 import javax.swing.event.EventListenerList;
 import javax.swing.event.TreeModelEvent;
@@ -26,6 +27,7 @@ public class FolderTree implements TreeModel {
     
     //endregion
 
+    //region TreeModel Overrides
     /**
      * Retrieves the root of the folder tree.
      * @return the root Folder
@@ -108,7 +110,8 @@ public class FolderTree implements TreeModel {
         System.out.println("INFO: Removing tree model listener " + l);
         this.listener_list.remove(TreeModelListener.class, l);
     }
-    
+    //endregion
+
     /**
      * Inserts node as child of a parent node. Sends 
      * {@link javax.swing.event.TreeModelEvent} event to all listeners.
@@ -140,22 +143,50 @@ public class FolderTree implements TreeModel {
         
         TreeModelEvent e = new TreeModelEvent(this, path, child_indices, children);
         EventListener[] listeners = listener_list.getListeners(TreeModelListener.class);
-        for (int i = 0; i < listeners.length; i++)
-           ((TreeModelListener) listeners[i]).treeNodesRemoved(e);
+        for (EventListener listener : listeners) ((TreeModelListener) listener).treeNodesRemoved(e);
     }
     
     @Override
     public void valueForPathChanged(TreePath path, Object newValue) {
-        System.out.println("INFO: Changing node at path " + path.toString());
+        System.out.println("INFO: Changing node at path " + path.toString() + " to " + newValue.toString() + ".");
         Node node = (Node)path.getLastPathComponent();
         node.setTitle(newValue.toString());
     }
-    
-    protected void fireTreeStructureChanged(Object oldRoot)
+
+    /**
+     * Notifies all listeners of a tree structure change. Not used. Was super useful before I figured out how to write
+     * my own TreeModelEvents (the documentation >>really<< sucks). It resets the JTree view, which can be quite a
+     * headache.
+     */
+    @Deprecated
+    protected void fireTreeStructureChanged()
     {
-        TreeModelEvent event = new TreeModelEvent(this, new Object[] { oldRoot });
+        TreeModelEvent event = new TreeModelEvent(this, new Object[] { root_folder });
         EventListener[] listeners = listener_list.getListeners(TreeModelListener.class);
-        for (int i = 0; i < listeners.length; i++)
-            ((TreeModelListener) listeners[i]).treeStructureChanged(event);
+        for (EventListener listener : listeners) ((TreeModelListener) listener).treeStructureChanged(event);
+    }
+
+    /**
+     * Sort children of a parent Folder lexicographically. Sorts recursively over all sub-folders.
+     * @param parent parent Folder.
+     */
+    public void sortChildren(Folder parent) {
+        parent.sort();
+        TreeModelEvent event = new TreeModelEvent(this, parent.getPathArray());
+        EventListener[] listeners = listener_list.getListeners(TreeModelListener.class);
+        for (EventListener listener : listeners) ((TreeModelListener) listener).treeStructureChanged(event);
+    }
+
+    /**
+     * Sort children of a parent Folder using provided Comparator implementation. Sorts recursively over all
+     * sub-folders.
+     * @param parent parent Folder.
+     * @param comparator provided Comparator.
+     */
+    public void sortChildren(Folder parent, Comparator<Node> comparator) {
+        parent.sort(comparator);
+        TreeModelEvent event = new TreeModelEvent(this, parent.getPathArray());
+        EventListener[] listeners = listener_list.getListeners(TreeModelListener.class);
+        for (EventListener listener : listeners) ((TreeModelListener) listener).treeStructureChanged(event);
     }
 }
