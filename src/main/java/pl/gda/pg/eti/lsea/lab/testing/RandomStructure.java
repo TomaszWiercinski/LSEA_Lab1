@@ -12,7 +12,7 @@ import pl.gda.pg.eti.lsea.lab.Snippet;
 public class RandomStructure {
     
     //region Fields
-    Random rand = new Random(); // random number generator used to pick nouns
+    private static Random rand = new Random(); // random number generator used to pick nouns
     private int max_depth; // maximum depth of the file tree, default=3
     private int max_width; // maximum number of nodes within a folder, default=3
     //endregion
@@ -43,7 +43,7 @@ public class RandomStructure {
      * "Thing" + "Doer" + "s".
      * @return random Folder
      */
-    private Folder generate_folder() {
+    public static Folder generate_folder() {
         String title = thing[rand.nextInt(thing.length)] +
                 doer[rand.nextInt(doer.length)] + "s";
         return new Folder(title);
@@ -54,7 +54,7 @@ public class RandomStructure {
      * "Thing" + "Doer".
      * @return random Snippet
      */
-    private Snippet generate_snippet() {
+    public static Snippet generate_snippet() {
         String title = thing[rand.nextInt(thing.length)] +
                 doer[rand.nextInt(doer.length)];
         return new Snippet(title, "Java");

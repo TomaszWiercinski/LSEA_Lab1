@@ -1,6 +1,5 @@
 package pl.gda.pg.eti.lsea.lab.testing;
 
-import pl.gda.pg.eti.lsea.lab.Folder;
 import pl.gda.pg.eti.lsea.lab.Node;
 
 import java.util.ArrayList;
@@ -38,10 +37,15 @@ public class MultithreadedSearch {
     }
     //endregion
 
+    /**
+     * Divides a list based on number of threads and assigns each thread to a segment of the list. Repeats the
+     * operation with the number of threads ranging from 1 to max_threads. Prints out a list of times for each number
+     * of threads.
+     */
     public void search() {
 
         List<Future> futures = new ArrayList<>(); // list of futures for each thread in pool
-        ExecutorService dynamic_executor; // pool of threads
+        ArrayList<Thread> thread_list = new ArrayList<>(); // list of threads
         ArrayList<Long> times = new ArrayList<Long>(); // list of times for each thread number
 
         int size; // size of sublist
@@ -52,6 +56,7 @@ public class MultithreadedSearch {
             results.clear();
             futures.clear();
             sublists.clear();
+            thread_list.clear();
 
             // prepare sublists
             size = (int) Math.ceil(list.size() / (float)i);
@@ -60,30 +65,29 @@ public class MultithreadedSearch {
                 sublists.add(list.subList(start, end));
             }
 
-            System.out.println("INFO: Created " + sublists.size() + " sublists.");
+            // print messages
+            System.out.println("INFO: Created " + sublists.size() + " sublists for " + i + " threads.");
+            System.out.print("INFO: Elements in sublists: [");
+            for (List<Node> l : sublists) System.out.print(" " + l.size());
+            System.out.println(" ]");
 
-            // new pool
-            dynamic_executor = new ThreadPoolExecutor(i, i, 60, TimeUnit.SECONDS,
-                    new LinkedBlockingQueue<>());
-
-            // add all threads to pool
+            // add all threads to list and run them on prepared sublists
+            long start = System.currentTimeMillis();
             for (int j = 0; j < i; j++) {
-                futures.add(dynamic_executor.submit(new Thread(new SearchRunnable(sublists.get(j)))));
+                Thread new_thread = new Thread(new SearchRunnable(sublists.get(j)));
+                thread_list.add(new_thread);
+                new_thread.run();
             }
 
             // wait for all threads
-            long start = System.currentTimeMillis();
             try {
-                for (Future f : futures) {
-                    f.get();
+                for (Thread t : thread_list) {
+                    t.join();
                 }
-                dynamic_executor.shutdown();
-                dynamic_executor.awaitTermination(60, TimeUnit.SECONDS);
             } catch (InterruptedException ex) {
                 System.out.println("EXCEPTION: InterruptedException!");
-            } catch (ExecutionException ex) {
-                System.out.println("EXCEPTION: ExecutionException!");
             }
+
             long end = System.currentTimeMillis();
             long duration = end-start;
 
@@ -100,35 +104,49 @@ public class MultithreadedSearch {
      */
     private class SearchRunnable implements Runnable {
 
-        private List<Node> list;
+        private List<Node> list; // assigned list of nodes to search through
 
         SearchRunnable(List<Node> list) {
             this.list = list;
         }
 
+        /**
+         * Searches the assigned list for nodes with selected term in title, performs and action and adds it to a shared
+         * ArrayList list via synchronized {@link #addNode(Node)} method.
+         */
         @Override
         public void run() {
             for (Node node : list) {
-                if (node.getTitle().toLowerCase().contains(term.toLowerCase()))
+                if (node.getTitle().toLowerCase().contains(term.toLowerCase())) {
+                    // perform some operations on found nodes
+                    node.getTitle().replaceAll(term, "FOUND");
+                    // add them to the shared list
                     addNode(node);
+                }
             }
         }
     }
 
     /**
-     * Tests multithreaded search on a large randomly generated file structure.
+     * Tests multithreaded search on a large randomly generated file structure. Example multithreading usage.
      * @param args
      */
     static public void main(String[] args) {
-        Folder root_folder = new Folder("Root");
-        RandomStructure rs = new RandomStructure(10, 5);
+        int list_length = 1000000; // elements on list
+        ArrayList<Node> node_list = new ArrayList<>(list_length);
 
-        System.out.println("INFO: Generating random folder structure");
-        for (int i = 0; i < 1000; i++) {
-            root_folder.addChild(rs.generate());
+        System.out.println("INFO: Generating random Nodes");
+        for (int i = 0; i < list_length / 2; i++) {
+            // generate random folders
+            node_list.add(RandomStructure.generate_folder());
+        }
+        for (int i = 0; i < list_length / 2; i++) {
+            // generate random snippets
+            node_list.add(RandomStructure.generate_snippet());
         }
 
-        MultithreadedSearch ms = new MultithreadedSearch(10, "Cube", root_folder.getAllChildren());
+        MultithreadedSearch ms = new MultithreadedSearch(10, "Cube", node_list);
+        System.out.println("INFO: Running MultithreadedSearch...\n");
         ms.search();
     }
 }
