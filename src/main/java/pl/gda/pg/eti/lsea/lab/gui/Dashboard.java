@@ -101,8 +101,28 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
         menu_edit_sort_date.getAccessibleContext().setAccessibleDescription("Sort by date");
         menu_edit_sort_date.addActionListener(this);
         menu_edit_sort.add(menu_edit_sort_date);
+
+        // Edit -> Add new
+        JMenu menu_edit_add = new JMenu("Add new");
+        menu_edit_add.setMnemonic(KeyEvent.VK_A);
+        menu_edit_add.getAccessibleContext().setAccessibleDescription("Add new element");
+
+        // Edit -> Add new -> Folder
+        JMenuItem menu_edit_add_folder = new JMenuItem("Folder");
+        menu_edit_add_folder.setMnemonic(KeyEvent.VK_F);
+        menu_edit_add_folder.getAccessibleContext().setAccessibleDescription("Add folder");
+        menu_edit_add_folder.addActionListener(this);
+        menu_edit_add.add(menu_edit_add_folder);
+
+        // Edit -> Add new -> Snippet
+        JMenuItem menu_edit_add_snippet = new JMenuItem("Snippet");
+        menu_edit_add_snippet.setMnemonic(KeyEvent.VK_S);
+        menu_edit_add_snippet.getAccessibleContext().setAccessibleDescription("Add snippet");
+        menu_edit_add_snippet.addActionListener(this);
+        menu_edit_add.add(menu_edit_add_snippet);
         
         menu_edit.add(menu_edit_sort);
+        menu_edit.add(menu_edit_add);
         
         menu_bar.add(menu_edit);
 
@@ -154,7 +174,9 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
     public void actionPerformed(ActionEvent e) { 
         String s = e.getActionCommand();
         TreePath node_path = tree.getSelectionPath();
-        Node node = (Node)node_path.getLastPathComponent();
+        Node node = null;
+        if (node_path != null)
+            node = (Node)node_path.getLastPathComponent();
         
         switch (s) {
             case "Copy":
@@ -182,6 +204,7 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
                 if (node == null)
                     break;
                 tree.startEditingAtPath(node_path);
+                break;
             case "By name":
                 if (node == null)
                     tree_model.sortChildren((Folder) tree_model.getRoot());
@@ -198,7 +221,20 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
                     tree_model.sortChildren(node_folder, new DateComparator());
                 }
                 break;
-
+            case "Folder":
+                if (node == null)
+                    tree_model.insertNodeInto(new Folder("New Folder"), (Folder) tree_model.getRoot());
+                else if (node instanceof  Folder) {
+                    tree_model.insertNodeInto(new Folder("New Folder"), (Folder) node);
+                }
+                break;
+            case "Snippet":
+                if (node == null)
+                    tree_model.insertNodeInto(new Snippet("New Snippet", "java"), (Folder) tree_model.getRoot());
+                else if (node instanceof  Folder) {
+                    tree_model.insertNodeInto(new Snippet("New Snippet", "java"), (Folder) node);
+                }
+                break;
         }
     } 
     
