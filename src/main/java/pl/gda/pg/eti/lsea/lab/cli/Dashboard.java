@@ -126,7 +126,7 @@ public class Dashboard {
     }
     
     /**
-     * Helper function of {@link #displaySnippet(pl.gda.pg.eti.lsea.lab1.Snippet)}.
+     * Helper function of {@link #displaySnippet(pl.gda.pg.eti.lsea.lab.Snippet)}.
      * Checks if Node is instance of Snippet and sends it over.
      * @param node 
      */
@@ -150,7 +150,7 @@ public class Dashboard {
     }
     
     /**
-     * Helper function of {@link #displayFolder(pl.gda.pg.eti.lsea.lab1.Folder)}.
+     * Helper function of {@link #displayFolder(pl.gda.pg.eti.lsea.lab.Folder)}.
      * Checks if Node is instance of Folder and sends it over.
      * @param node 
      */
@@ -202,11 +202,11 @@ public class Dashboard {
         // Change dates to better show sorting by date
         try {
             SimpleDateFormat sdt = new SimpleDateFormat("dd-MM-yyyy HH:mm");
-            random.setDateCreated(sdt.parse("30-07-1998 13:28"));
-            lsea.setDateCreated(new Date());
-            mas.setDateCreated(sdt.parse("01-12-2034 03:21"));
+            random.setDateEdited(sdt.parse("30-07-1998 13:28"));
+            lsea.setDateEdited(new Date());
+            mas.setDateEdited(sdt.parse("01-12-2034 03:21"));
         } catch (ParseException ex) {
-            System.out.println("Something went wrong while parsing dates!");
+            System.out.println("EXCEPTION: Something went wrong while parsing dates!");
         }
 
         // Add some example snippets.
