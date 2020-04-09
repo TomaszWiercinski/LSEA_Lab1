@@ -16,6 +16,7 @@ import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import pl.gda.pg.eti.lsea.lab.FolderTree;
 import pl.gda.pg.eti.lsea.lab.Folder;
@@ -136,7 +137,8 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
     @Override
     public void actionPerformed(ActionEvent e) { 
         String s = e.getActionCommand();
-        Node node = (Node)tree.getLastSelectedPathComponent();
+        TreePath node_path = tree.getSelectionPath();
+        Node node = (Node)node_path.getLastPathComponent();
         
         switch (s) {
             case "Copy":
@@ -160,6 +162,10 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
                 Folder node_parent = (Folder) node.getParent();
                 tree_model.removeChild(node, node_parent);
                 break;
+            case "Rename":
+                if (node == null)
+                    break;
+                tree.startEditingAtPath(node_path);
         }
     } 
     
