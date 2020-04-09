@@ -14,6 +14,7 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import pl.gda.pg.eti.lsea.lab.*;
+import pl.gda.pg.eti.lsea.lab.testing.MultithreadedSearch;
 import pl.gda.pg.eti.lsea.lab.testing.RandomStructure;
 
 /**
@@ -250,8 +251,10 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
                 break;
             case "By title":
                 String term = JOptionPane.showInputDialog(this, "Type search term:");
-                if (term != null && !term.isBlank())
-                    System.out.println(((Folder)tree_model.getRoot()).searchTitle(term));
+                if (term != null && !term.isBlank()) {
+                    MultithreadedSearch search = new MultithreadedSearch(5, term, ((Folder)tree_model.getRoot()).getAllChildren());
+                    search.search();
+                }
                 break;
         }
     } 
