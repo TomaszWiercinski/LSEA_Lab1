@@ -1,17 +1,11 @@
 package pl.gda.pg.eti.lsea.lab.gui;
 
-import java.awt.GridLayout;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import javax.swing.JEditorPane;
-import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JScrollPane;
-import javax.swing.JTree;
-import javax.swing.WindowConstants;
+import java.text.SimpleDateFormat;
+import javax.swing.*;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
@@ -35,6 +29,12 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
     private JEditorPane snippet; // displays snippet
     private JScrollPane snippet_view; // right JScrollPane for snippet
     private JMenuBar menu_bar; // the dashboard menu bar
+    private BorderLayout border_layout; // organizes dashboard elements
+    private JPanel label_panel = new JPanel(); // JPanel for holding labels
+    private JLabel label_title = new JLabel("-"); // title of selected Node
+    private JLabel label_date = new JLabel(""); // date of creation of selected Node
+
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss a"); // date format used in dashboard
     
     public Dashboard(FolderTree filetree) {
         super("Dashboard");
@@ -53,10 +53,6 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
         // Snippet scroll pane
         snippet = new JEditorPane();
         snippet_view = new JScrollPane(snippet);
-        
-        // Layout
-        GridLayout experimentLayout = new GridLayout(1, 2);
-        this.setLayout(experimentLayout);
         
         // Menu bar
         menu_bar = new JMenuBar();
@@ -109,12 +105,23 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
         menu_edit.add(menu_edit_sort);
         
         menu_bar.add(menu_edit);
-        
+
+        // Layout
+        border_layout = new BorderLayout();
+        this.setLayout(border_layout);
+        tree_view.setPreferredSize(new Dimension(220, 400));
+        this.add(tree_view, BorderLayout.LINE_START);
+
+        snippet_view.setPreferredSize(new Dimension(380, 400));
+        this.add(snippet_view, BorderLayout.CENTER);
+        label_panel.setLayout(new GridLayout(0,2));
+        label_panel.add(label_title);
+        label_panel.add(label_date);
+        this.add(label_panel, BorderLayout.PAGE_END);
+
         this.setSize(400, 300);
         this.setJMenuBar(menu_bar);
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        this.add(tree_view);
-        this.add(snippet_view);
         this.pack();
         this.setVisible(true);
     }
@@ -125,12 +132,22 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
     @Override
     public void valueChanged(TreeSelectionEvent e) {
         Node node = (Node)tree.getLastSelectedPathComponent();
+        String label_title_str = "-";
+        String label_date_str = "";
 
-        if (node == null) return;
-
-        if (node instanceof Snippet) {
-            snippet.setText(((Snippet) node).get());
+        // Make sure a node is selected.
+        if (node != null) {
+            label_title_str = node.getTitle();
+            if (node instanceof Snippet) {
+                Snippet node_snippet = (Snippet) node;
+                snippet.setText(node_snippet.get());
+                label_title_str += "." + node_snippet.getLang();
+            }
+            label_date_str += "last edited: " + sdf.format(node.getDateEdited());
         }
+
+        label_title.setText(label_title_str);
+        label_date.setText(label_date_str);
     }
     
     @Override
