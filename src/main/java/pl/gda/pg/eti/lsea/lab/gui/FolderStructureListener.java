@@ -13,26 +13,22 @@ public class FolderStructureListener implements TreeModelListener {
 
     @Override
     public void treeNodesChanged(TreeModelEvent e) {
-        Node node;
-        node = (Node)(e.getTreePath().getLastPathComponent());
-
-        System.out.println("The user has finished editing the node.");
-        System.out.println("New value: " + node.getTitle());
+        System.out.println("INFO: Node(s) changed [" + e.getChildren() + "], on path: " + e.getTreePath());
     }
 
     @Override
     public void treeNodesInserted(TreeModelEvent e) {
-        // TODO: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        System.out.println("INFO: New node(s) inserted [" + e.getChildren() + "], on path: " + e.getTreePath());
     }
 
     @Override
     public void treeNodesRemoved(TreeModelEvent e) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        System.out.println("INFO: Node(s) removed [" + e.getChildren() + "], on path: " + e.getTreePath());
     }
 
     @Override
     public void treeStructureChanged(TreeModelEvent e) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        System.out.println("INFO: Tree structure changed.");
     }
     
 }
