@@ -28,6 +28,12 @@ public class Folder extends Node {
     public ArrayList<Node> getChildren() {
         return children;
     }
+
+    /**
+     * Returns the child Node at the specified position in the list.
+     * @param index index of child.
+     * @return child Node at the specified position.
+     */
     public Node getChild(int index) {
         Node child = null;
         
@@ -37,6 +43,12 @@ public class Folder extends Node {
         
         return child;
     }
+
+    /**
+     * Returns the first child Node from the list that matches the passed title.
+     * @param title child Node title.
+     * @return first child Node with passed title.
+     */
     public Node getChildFromTitle(String title) {
         Node out = null;
         for (Node child : children)
@@ -45,6 +57,22 @@ public class Folder extends Node {
                 break;
             }
         return out;
+    }
+
+    /**
+     * Gets all child Nodes recursively and returns as an ArrayList.
+     * @return list of all child Nodes.
+     */
+    public ArrayList<Node> getAllChildren() {
+        ArrayList<Node> children_all = new ArrayList<>(children);
+
+        for (Node child : children) {
+            if (child instanceof Folder) {
+                children_all.addAll(((Folder) child).getAllChildren());
+            }
+        }
+
+        return children_all;
     }
     //endregion
     
