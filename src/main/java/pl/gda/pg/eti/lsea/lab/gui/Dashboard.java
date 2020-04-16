@@ -4,10 +4,9 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import javax.swing.*;
-import javax.swing.event.TreeModelEvent;
-import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
@@ -20,25 +19,163 @@ import pl.gda.pg.eti.lsea.lab.testing.RandomStructure;
 /**
  * The point of contact between the user and the application.
  *
- * Uses:
- * Deep cloning
- *  - non-interactive example in {@link Folder#main(String[])}
- * Multithreading
- *  - better example and implementation in {@link MultithreadedSearch}
- * Sorting with a Comparable
- *  - implementation in {@link Node#compareTo(Node)}
- *  - non-interactive example in {@link Folder#main(String[])}
- * Sorting with a Comparator
- *  - implementation in {@link DateComparator}
- *  - comparator sorts based on date of last edit, renaming nodes counts as editing
- *
- * Used elsewhere:
- * enum
- *  - implementation and usage in {@link pl.gda.pg.eti.lsea.lab.cli.Dashboard}
- *
  * @author Tomasz Wierciński
  */
 public class Dashboard extends JFrame implements TreeSelectionListener, ActionListener {
+
+    enum FileAction {
+        COPY("Copy", KeyEvent.VK_C, "Copy selected") {
+            @Override
+            void execute(Node node, FolderTree tree_model, TreePath node_path, JTree tree) {
+                if (node == null)
+                    return;
+                try {
+                    System.out.println("INFO: Creating copy of " + node.getPath());
+
+                    // Create a copy of selected node - deep cloning implementation usage.
+                    Node node_copy = (Node) node.clone();
+                    Folder node_parent = (Folder) node.getParent();
+                    node_copy.setTitle(node.getTitle() + "_copy");
+
+                    // Insert copy into structure.
+                    tree_model.insertNodeInto(node_copy, node_parent);
+                } catch (CloneNotSupportedException ex) {
+                    System.out.println("EXCEPTION: This ain't Dolly, that's for sure.");
+                }
+            }
+        }, DELETE("Delete", KeyEvent.VK_D, "Delete selected") {
+            @Override
+            void execute(Node node, FolderTree tree_model, TreePath node_path, JTree tree) {
+                // Remove selected node from the structure.
+                if (node == null) return;
+                System.out.println("INFO: Deleting " + node.getPath());
+                Folder node_parent = (Folder) node.getParent();
+                tree_model.removeChild(node, node_parent);
+            }
+        }, RENAME("Rename", KeyEvent.VK_R, "Rename selected") {
+            @Override
+            void execute(Node node, FolderTree tree_model, TreePath node_path, JTree tree) {
+                // Rename the selected node (can also be done via triple click).
+                if (node == null) return;
+                tree.startEditingAtPath(node_path);
+            }
+        }, SORT_NAME("By name", KeyEvent.VK_N, "Sort by name") {
+            @Override
+            void execute(Node node, FolderTree tree_model, TreePath node_path, JTree tree) {
+                // Sort nodes within the selected folder lexicographically.
+                if (node == null) // if no node selected, sort at root folder
+                    tree_model.sortChildren((Folder) tree_model.getRoot());
+                else if (node instanceof Folder) {
+                    Folder node_folder = (Folder) node;
+                    // Comparable implementation usage.
+                    tree_model.sortChildren(node_folder);
+                }
+            }
+        }, SORT_DATE("By date", KeyEvent.VK_D, "Sort by date") {
+            @Override
+            void execute(Node node, FolderTree tree_model, TreePath node_path, JTree tree) {
+                // Sort nodes within the selected folder based on creation date.
+                if (node == null) // if no node selected, sort at root folder
+                    tree_model.sortChildren((Folder) tree_model.getRoot(), new DateComparator());
+                else if (node instanceof Folder) {
+                    Folder node_folder = (Folder) node;
+                    // Comparator implementation usage.
+                    tree_model.sortChildren(node_folder, new DateComparator());
+                }
+            }
+        }, NEW_FOLDER("Folder", KeyEvent.VK_F, "Insert new folder") {
+            @Override
+            void execute(Node node, FolderTree tree_model, TreePath node_path, JTree tree) {
+                // Insert a new folder into the selected folder.
+                if (node == null) // if no node selected, insert into root folder
+                    tree_model.insertNodeInto(new Folder("New Folder"), (Folder) tree_model.getRoot());
+                else if (node instanceof  Folder) {
+                    tree_model.insertNodeInto(new Folder("New Folder"), (Folder) node);
+                }
+            }
+        }, NEW_SNIPPET("Snippet", KeyEvent.VK_S, "Insert new snippet") {
+            @Override
+            void execute(Node node, FolderTree tree_model, TreePath node_path, JTree tree) {
+                // Insert a new snippet into the selected folder.
+                if (node == null) // if no node selected, insert into root folder
+                    tree_model.insertNodeInto(new Snippet("New Snippet", "java"), (Folder) tree_model.getRoot());
+                else if (node instanceof  Folder) {
+                    tree_model.insertNodeInto(new Snippet("New Snippet", "java"), (Folder) node);
+                }
+            }
+        }, SEARCH_TITLE("By title", KeyEvent.VK_T, "Search by title") {
+            @Override
+            void execute(Node node, FolderTree tree_model, TreePath node_path, JTree tree) {
+                // Search the entire structure by title.
+                // Pop-up asking for search term.
+                String term = JOptionPane.showInputDialog(this, "Type search term:");
+                if (term != null && !term.isBlank()) {
+                    // example multithreading usage / implementation - for more information inquire within MultithreadedSearch.java
+                    MultithreadedSearch search = new MultithreadedSearch(5, term, ((Folder)tree_model.getRoot()).getAllChildren());
+                    search.search();
+                }
+            }
+        }, EXPORT_SELECTED("Export selected...", KeyEvent.VK_S, "Export selected") {
+            @Override
+            void execute(Node node, FolderTree tree_model, TreePath node_path, JTree tree) {
+                ImportExportManager file_chooser = new ImportExportManager();
+                if (node == null) // if no node selected, export entire dashboard
+                file_chooser.export_node((Node) tree_model.getRoot());
+                else
+                file_chooser.export_node(node);
+            }
+        }, EXPORT_DASHBOARD("Export dashboard...", KeyEvent.VK_S, "Export entire dashboard") {
+            @Override
+            void execute(Node node, FolderTree tree_model, TreePath node_path, JTree tree) {
+                ImportExportManager file_chooser = new ImportExportManager();
+                file_chooser.export_node((Node) tree_model.getRoot());
+            }
+        }, IMPORT("Import...", KeyEvent.VK_I, "Import from file") {
+            @Override
+            void execute(Node node, FolderTree tree_model, TreePath node_path, JTree tree) {
+                ImportExportManager file_chooser = new ImportExportManager();
+                Node imported_node = file_chooser.import_node();
+                if (imported_node != null) {
+                    if (node == null) // if no node selected, insert into root folder
+                        tree_model.insertNodeInto(imported_node, (Folder) tree_model.getRoot());
+                    else if (node instanceof  Snippet) {  // if Snippet selected, insert into parent
+                        tree_model.insertNodeInto(imported_node, (Folder) node.getParent());
+                    } else if (node instanceof  Folder) {
+                        tree_model.insertNodeInto(imported_node, (Folder) node);
+                    }
+                }
+            }
+        };
+
+        private final String accessible_desc;
+        private final int mnemonic;
+        private final String title;
+
+        FileAction(String title, int mnemonic, String accessible_desc) {
+            this.accessible_desc = accessible_desc;
+            this.mnemonic = mnemonic;
+            this.title = title;
+        }
+
+        public JMenuItem getJMenuItem() {
+            JMenuItem menu_item = new JMenuItem(this.title);
+            menu_item.setMnemonic(this.mnemonic);
+            menu_item.getAccessibleContext().setAccessibleDescription(this.accessible_desc);
+            return menu_item;
+        }
+
+        public static FileAction getEnum(String value) {
+            for(FileAction v : values())
+                if(v.toString().equalsIgnoreCase(value)) return v;
+            throw new IllegalArgumentException();
+        }
+
+        @Override
+        public String toString() {
+            return this.title;
+        }
+        abstract void execute(Node node, FolderTree tree_model, TreePath node_path, JTree tree);
+    }
     
     private JTree tree; // JTree component - displays the tree
     private FolderTree tree_model; // TreeModel - manages tree structure
@@ -50,6 +187,7 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
     private JPanel label_panel = new JPanel(); // JPanel for holding labels
     private JLabel label_title = new JLabel("-"); // title of selected Node
     private JLabel label_date = new JLabel(""); // date of creation of selected Node
+    private ImportExportManager file_chooser = new ImportExportManager();
 
     private static final SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss a"); // date format used in dashboard
 
@@ -71,91 +209,94 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
         // Snippet scroll pane
         snippet = new JEditorPane();
         snippet_view = new JScrollPane(snippet);
-        
-        // Menu bar
+
+        // region SETUP - MENU BAR
         menu_bar = new JMenuBar();
-        
-        // Edit menu
-        JMenu menu_edit = new JMenu("Edit");
-        menu_edit.setMnemonic(KeyEvent.VK_E);
-        menu_edit.getAccessibleContext().setAccessibleDescription("Edit menu");
-        
-        // Edit -> Copy
-        JMenuItem menu_edit_copy = new JMenuItem("Copy");
-        menu_edit_copy.setMnemonic(KeyEvent.VK_C);
-        menu_edit_copy.getAccessibleContext().setAccessibleDescription("Copy selected");
-        menu_edit_copy.addActionListener(this);
-        menu_edit.add(menu_edit_copy);
-        
-        // Edit -> Delete
-        JMenuItem menu_edit_delete = new JMenuItem("Delete");
-        menu_edit_delete.setMnemonic(KeyEvent.VK_D);
-        menu_edit_delete.getAccessibleContext().setAccessibleDescription("Delete selected");
-        menu_edit_delete.addActionListener(this);
-        menu_edit.add(menu_edit_delete);
-        
-        // Edit -> Rename
-        JMenuItem menu_edit_rename = new JMenuItem("Rename");
-        menu_edit_rename.setMnemonic(KeyEvent.VK_R);
-        menu_edit_rename.getAccessibleContext().setAccessibleDescription("Rename selected");
-        menu_edit_rename.addActionListener(this);
-        menu_edit.add(menu_edit_rename);
-        
-        // Edit -> Sort
-        JMenu menu_edit_sort = new JMenu("Sort");
-        menu_edit_sort.setMnemonic(KeyEvent.VK_S);
-        menu_edit_sort.getAccessibleContext().setAccessibleDescription("Sort snippets");
-        
-        // Edit -> Sort -> By name
-        JMenuItem menu_edit_sort_name = new JMenuItem("By name");
-        menu_edit_sort_name.setMnemonic(KeyEvent.VK_N);
-        menu_edit_sort_name.getAccessibleContext().setAccessibleDescription("Sort by name");
-        menu_edit_sort_name.addActionListener(this);
-        menu_edit_sort.add(menu_edit_sort_name);
-        
-        // Edit -> Sort -> By date
-        JMenuItem menu_edit_sort_date = new JMenuItem("By date");
-        menu_edit_sort_date.setMnemonic(KeyEvent.VK_D);
-        menu_edit_sort_date.getAccessibleContext().setAccessibleDescription("Sort by date");
-        menu_edit_sort_date.addActionListener(this);
-        menu_edit_sort.add(menu_edit_sort_date);
 
-        // Edit -> Add new
-        JMenu menu_edit_add = new JMenu("Add new");
-        menu_edit_add.setMnemonic(KeyEvent.VK_A);
-        menu_edit_add.getAccessibleContext().setAccessibleDescription("Add new element");
+        // File menu
+        JMenu menu_file = new JMenu("File");
+        menu_file.setMnemonic(KeyEvent.VK_F);
+        menu_file.getAccessibleContext().setAccessibleDescription("File menu");
 
-        // Edit -> Add new -> Folder
-        JMenuItem menu_edit_add_folder = new JMenuItem("Folder");
-        menu_edit_add_folder.setMnemonic(KeyEvent.VK_F);
-        menu_edit_add_folder.getAccessibleContext().setAccessibleDescription("Add folder");
-        menu_edit_add_folder.addActionListener(this);
-        menu_edit_add.add(menu_edit_add_folder);
+        // File -> Copy
+        JMenuItem menu_file_copy = FileAction.COPY.getJMenuItem();
+        menu_file_copy.addActionListener(this);
+        menu_file.add(menu_file_copy);
 
-        // Edit -> Add new -> Snippet
-        JMenuItem menu_edit_add_snippet = new JMenuItem("Snippet");
-        menu_edit_add_snippet.setMnemonic(KeyEvent.VK_S);
-        menu_edit_add_snippet.getAccessibleContext().setAccessibleDescription("Add snippet");
-        menu_edit_add_snippet.addActionListener(this);
-        menu_edit_add.add(menu_edit_add_snippet);
-        
-        menu_edit.add(menu_edit_sort);
-        menu_edit.add(menu_edit_add);
+        // File -> Delete
+        JMenuItem menu_file_delete = FileAction.DELETE.getJMenuItem();
+        menu_file_delete.addActionListener(this);
+        menu_file.add(menu_file_delete);
 
-        // Search
+        // File -> Rename
+        JMenuItem menu_file_rename = FileAction.RENAME.getJMenuItem();
+        menu_file_rename.addActionListener(this);
+        menu_file.add(menu_file_rename);
+
+        // File -> Sort submenu
+        JMenu menu_file_sort = new JMenu("Sort");
+        menu_file_sort.setMnemonic(KeyEvent.VK_S);
+        menu_file_sort.getAccessibleContext().setAccessibleDescription("Sort snippets");
+
+        // File -> Sort -> By name
+        JMenuItem menu_file_sort_name = FileAction.SORT_NAME.getJMenuItem();
+        menu_file_sort_name.addActionListener(this);
+        menu_file_sort.add(menu_file_sort_name);
+
+        // File -> Sort -> By date
+        JMenuItem menu_file_sort_date = FileAction.SORT_DATE.getJMenuItem();
+        menu_file_sort_date.addActionListener(this);
+        menu_file_sort.add(menu_file_sort_date);
+
+        // File -> Add new submenu
+        JMenu menu_file_add = new JMenu("Add new");
+        menu_file_add.setMnemonic(KeyEvent.VK_A);
+        menu_file_add.getAccessibleContext().setAccessibleDescription("Add new element");
+
+        // File -> Add new -> Folder
+        JMenuItem menu_file_add_folder = FileAction.NEW_FOLDER.getJMenuItem();
+        menu_file_add_folder.addActionListener(this);
+        menu_file_add.add(menu_file_add_folder);
+
+        // File -> Add new -> Snippet
+        JMenuItem menu_file_add_snippet = FileAction.NEW_SNIPPET.getJMenuItem();
+        menu_file_add_snippet.addActionListener(this);
+        menu_file_add.add(menu_file_add_snippet);
+
+        menu_file.add(menu_file_sort);
+        menu_file.add(menu_file_add);
+
+        // Separator
+        menu_file.add(new JSeparator());
+
+        // File -> Export selected
+        JMenuItem menu_file_export_snippet = FileAction.EXPORT_SELECTED.getJMenuItem();
+        menu_file_export_snippet.addActionListener(this);
+        menu_file.add(menu_file_export_snippet);
+
+        // File -> Export dashboard
+        JMenuItem menu_file_export_dash = FileAction.EXPORT_DASHBOARD.getJMenuItem();
+        menu_file_export_dash.addActionListener(this);
+        menu_file.add(menu_file_export_dash);
+
+        // File -> Import
+        JMenuItem menu_file_import = FileAction.IMPORT.getJMenuItem();
+        menu_file_import.addActionListener(this);
+        menu_file.add(menu_file_import);
+
+        // Search menu
         JMenu menu_search = new JMenu("Search");
         menu_search.setMnemonic(KeyEvent.VK_S);
         menu_search.getAccessibleContext().setAccessibleDescription("Search menu");
 
-        // Edit -> Copy
-        JMenuItem menu_search_title = new JMenuItem("By title");
-        menu_search_title.setMnemonic(KeyEvent.VK_T);
-        menu_search_title.getAccessibleContext().setAccessibleDescription("Search by title");
+        // Search -> By title
+        JMenuItem menu_search_title = FileAction.SEARCH_TITLE.getJMenuItem();
         menu_search_title.addActionListener(this);
         menu_search.add(menu_search_title);
-        
-        menu_bar.add(menu_edit);
+
+        menu_bar.add(menu_file);
         menu_bar.add(menu_search);
+        // endregion
 
         // Layout
         border_layout = new BorderLayout();
@@ -220,85 +361,8 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
         if (node_path != null)
             node = (Node)node_path.getLastPathComponent();
 
-        // The big switch
-        switch (s) {
-            // Copy the selected node and insert in the same folder as old_title + "_copy".
-            case "Copy":
-                if (node == null)
-                    break;
-                try {
-                    System.out.println("INFO: Creating copy of " + node.getPath());
-
-                    // Create a copy of selected node - deep cloning implementation usage.
-                    Node node_copy = (Node) node.clone();
-                    Folder node_parent = (Folder) node.getParent();
-                    node_copy.setTitle(node.getTitle() + "_copy");
-
-                    // Insert copy into structure.
-                    tree_model.insertNodeInto(node_copy, node_parent);
-                } catch (CloneNotSupportedException ex) {
-                    System.out.println("EXCEPTION: This ain't Dolly, that's for sure.");
-                }
-                break;
-            // Remove selected node from the structure.
-            case "Delete":
-                if (node == null) break;
-                System.out.println("INFO: Deleting " + node.getPath());
-                Folder node_parent = (Folder) node.getParent();
-                tree_model.removeChild(node, node_parent);
-                break;
-            // Rename the selected node (can also be done via triple click).
-            case "Rename":
-                if (node == null) break;
-                tree.startEditingAtPath(node_path);
-                break;
-            // Sort nodes within the selected folder lexicographically.
-            case "By name":
-                if (node == null) // if no node selected, sort at root folder
-                    tree_model.sortChildren((Folder) tree_model.getRoot());
-                else if (node instanceof Folder) {
-                    Folder node_folder = (Folder) node;
-                    // Comparable implementation usage.
-                    tree_model.sortChildren(node_folder);
-                }
-                break;
-            // Sort nodes within the selected folder based on creation date.
-            case "By date":
-                if (node == null) // if no node selected, sort at root folder
-                    tree_model.sortChildren((Folder) tree_model.getRoot(), new DateComparator());
-                else if (node instanceof Folder) {
-                    Folder node_folder = (Folder) node;
-                    // Comparator implementation usage.
-                    tree_model.sortChildren(node_folder, new DateComparator());
-                }
-                break;
-            // Insert a new folder into the selected folder.
-            case "Folder":
-                if (node == null) // if no node selected, insert into root folder
-                    tree_model.insertNodeInto(new Folder("New Folder"), (Folder) tree_model.getRoot());
-                else if (node instanceof  Folder) {
-                    tree_model.insertNodeInto(new Folder("New Folder"), (Folder) node);
-                }
-                break;
-            // Insert a new snippet into the selected folder.
-            case "Snippet":
-                if (node == null) // if no node selected, insert into root folder
-                    tree_model.insertNodeInto(new Snippet("New Snippet", "java"), (Folder) tree_model.getRoot());
-                else if (node instanceof  Folder) {
-                    tree_model.insertNodeInto(new Snippet("New Snippet", "java"), (Folder) node);
-                }
-                break;
-            // Search the entire structure by title.
-            case "By title":
-                // Pop-up asking for search term.
-                String term = JOptionPane.showInputDialog(this, "Type search term:");
-                if (term != null && !term.isBlank()) {
-                    // example multithreading usage / implementation - for more information inquire within MultithreadedSearch.java
-                    MultithreadedSearch search = new MultithreadedSearch(5, term, ((Folder)tree_model.getRoot()).getAllChildren());
-                    search.search();
-                }
-                break;
-        }
+        // The big switch IS NO MORE :crab::crab::crab:
+        FileAction.getEnum(s).execute(node, tree_model, node_path, tree);
     } 
     
     /**

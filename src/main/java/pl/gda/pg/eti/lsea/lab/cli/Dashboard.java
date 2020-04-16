@@ -24,57 +24,57 @@ public class Dashboard {
      * console commands.
      */
     enum ConsoleAction {
-        MOVE("move [id]: Move to the Folder, or view the Snippet.") {
-            @Override
-            Node execute(Node current, String[] args) {
-                current = ((Folder) current).getChildren().get(Integer.parseInt(args[1]) - 1);
-                return current;
-            }
-        }, 
-        UP("up: Move up in the structure.") {
-            @Override
-            Node execute(Node current, String[] args) {
-                Node parent = current.getParent();
-                if (parent != null) {
-                    current = current.getParent();
+            MOVE("move [id]: Move to the Folder, or view the Snippet.") {
+                @Override
+                Node execute(Node current, String[] args) {
+                    current = ((Folder) current).getChildren().get(Integer.parseInt(args[1]) - 1);
+                    return current;
                 }
-                return current;
-            }
-        }, 
-        DEL("del [id]: Delete an element in structure.") {
-            @Override
-            Node execute(Node current, String[] args) {
-                ((Folder) current).removeChild(Integer.parseInt(args[1]) - 1);
-                return current;
-            }
-        }, 
-        COPY("copy [id]: Copy an element in structure.") {
-            @Override
-            Node execute(Node current, String[] args) throws CloneNotSupportedException  {
-                Node selected = ((Folder)current).getChildren().get(Integer.parseInt(args[1]) - 1);
-                // Deep cloning usage.
-                Node selected_copy = (Node) selected.clone();
-                selected_copy.setTitle(selected.getTitle() + "_copy");
-                ((Folder) current).addChild(selected_copy);
-                return current;
-            }
-        },
-        SORT("sort: Sort elements lexicographically.") {
-            @Override
-            Node execute(Node current, String[] argd) {
-                // Comparable implementation usage
-                ((Folder) current).sort();
-                return current;
-            }
-        },
-        SORTDATE("sortDate: Sort elements based on date of creation.") {
-            @Override
-            Node execute(Node current, String[] args) {
-                // Comparator implementation usage
-                ((Folder) current).sort(new DateComparator());
-                return current;
-            }
-        };
+            },
+            UP("up: Move up in the structure.") {
+                @Override
+                Node execute(Node current, String[] args) {
+                    Node parent = current.getParent();
+                    if (parent != null) {
+                        current = current.getParent();
+                    }
+                    return current;
+                }
+            },
+            DEL("del [id]: Delete an element in structure.") {
+                @Override
+                Node execute(Node current, String[] args) {
+                    ((Folder) current).removeChild(Integer.parseInt(args[1]) - 1);
+                    return current;
+                }
+            },
+            COPY("copy [id]: Copy an element in structure.") {
+                @Override
+                Node execute(Node current, String[] args) throws CloneNotSupportedException  {
+                    Node selected = ((Folder)current).getChildren().get(Integer.parseInt(args[1]) - 1);
+                    // Deep cloning usage.
+                    Node selected_copy = (Node) selected.clone();
+                    selected_copy.setTitle(selected.getTitle() + "_copy");
+                    ((Folder) current).addChild(selected_copy);
+                    return current;
+                }
+            },
+            SORT("sort: Sort elements lexicographically.") {
+                @Override
+                Node execute(Node current, String[] argd) {
+                    // Comparable implementation usage
+                    ((Folder) current).sort();
+                    return current;
+                }
+            },
+            SORTDATE("sortDate: Sort elements based on date of creation.") {
+                @Override
+                Node execute(Node current, String[] args) {
+                    // Comparator implementation usage
+                    ((Folder) current).sort(new DateComparator());
+                    return current;
+                }
+            };
         
         private final String desc;
         
