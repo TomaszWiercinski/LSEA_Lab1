@@ -1,5 +1,6 @@
 package pl.gda.pg.eti.lsea.lab;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -9,7 +10,7 @@ import javax.swing.tree.TreePath;
  * Abstract Node class representing every element within the file structure.
  * @author Tomasz Wierciński
  */
-public abstract class Node implements Cloneable, Comparable<Node> {
+public abstract class Node implements Cloneable, Comparable<Node>, Serializable {
     
     // region Fields
     protected String title;  // name of the node
