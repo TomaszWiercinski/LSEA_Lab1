@@ -11,20 +11,29 @@ import java.util.concurrent.TimeUnit;
 public class FileHogger implements Runnable {
 
     private File file;
+    private int millis;
 
-    public FileHogger(File file) {
+    public FileHogger(File file, int millis) {
+        this.millis = millis;
         this.file = file;
+    }
+    public FileHogger(File file) {
+        this(file, 10000);
     }
 
     @Override
-    public void run() {
+    public synchronized void run() {
         try (FileOutputStream out = new FileOutputStream(this.file);
              FileChannel channel = out.getChannel();
              FileLock lock = channel.tryLock()) {
 
             System.out.println("INFO: Hogging file \"" + file.getAbsolutePath() + "\".");
 
-            Thread.sleep(10000);
+            try {
+                this.wait(millis);
+            } catch (InterruptedException e) {
+                System.out.println("INFO: Finishing early!");
+            }
 
             System.out.println("INFO: Finished hogging file \"" + file.getAbsolutePath() + "\".");
 

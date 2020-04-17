@@ -59,10 +59,14 @@ public class ImportExportManager {
         try {
             if (node instanceof Folder) {
                 File file = this.display_export_dialog(ImportExportManager.filter_folder);
-                this.export_folder((Folder) node, file);
+                if (file != null) {
+                    this.export_folder((Folder) node, file);
+                }
             } else if (node instanceof Snippet) {
                 File file = this.display_export_dialog(ImportExportManager.filter_snippet);
-                this.export_snippet((Snippet) node, file);
+                if (file != null) {
+                    this.export_snippet((Snippet) node, file);
+                }
             }
         } catch (IOException e) {
             JOptionPane.showMessageDialog (null,
@@ -149,7 +153,6 @@ public class ImportExportManager {
     }
 
     private File display_export_dialog(FileNameExtensionFilter filter) throws IOException {
-        // TODO: Actually force a specific file extension?
         this.file_chooser.setFileFilter(filter);
 
         // Ask for file
@@ -341,7 +344,8 @@ public class ImportExportManager {
         }
 
         System.out.println("\nLaunching file hogger!\n");
-        Thread thread = new Thread(new FileHogger(file));
+        FileHogger hogger = new FileHogger(file, 0);
+        Thread thread = new Thread(hogger);
         thread.start();
 
         // Short sleep to make sure file hogger starts hogging.
@@ -356,6 +360,7 @@ public class ImportExportManager {
 
         System.out.println("Waiting for file hogger to stop hogging!\n");
         try {
+            thread.interrupt();
             thread.join();
 
             System.out.println("\nAttempting to export again!\n");
