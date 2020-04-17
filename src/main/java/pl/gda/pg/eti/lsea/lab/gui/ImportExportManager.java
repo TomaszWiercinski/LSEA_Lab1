@@ -14,24 +14,35 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 /**
+ * Used to import and export individual Snippets and entire Folders. Allows export of Snippets to text and binary files
+ * and export of Folders to binary files. Binary files use "snip" extension.
  *
+ * @author Tomasz Wierciński
  */
 public class ImportExportManager {
 
-    // Snippets can be saved as plain text files or as .snip files (binary file)
+    //region FIELDS
+    /**
+     * Filter for allowed Snippet export/import file extensions. Snippets can be saved as plain text files or as
+     * .snip files (binary files).
+     */
     private static final FileNameExtensionFilter filter_snippet =
             new FileNameExtensionFilter("Snippet files", "txt", "snip");
-    // Folders can only be saved as .snip files (binary file)
+
+    /**
+     * Filter for allowed Folder export file extensions. Folders can only be saved as .snip files (binary files).
+     */
     private static final FileNameExtensionFilter filter_folder =
             new FileNameExtensionFilter("Dashboard files", "snip");
 
-    private static final int text_file_version = 1;
-    private static final String snippet_code = "SNIP";
-    private static final int snip_file_version = 1;
-    private static final String folder_code = "FOLD";
+    /**
+     * Used to prompt the user to select a file when one isn't passed as argument.
+     */
     private JFileChooser file_chooser;
+    // endregion
 
     public ImportExportManager() {
         this.file_chooser = new JFileChooser();
@@ -41,101 +52,120 @@ public class ImportExportManager {
     }
 
     // region METHODS - EXPORT
+
+    /**
+     * Export Node passed as argument to a selected File.
+     *
+     * @param node
+     * Node to export.
+     * @param file
+     * File to export to.
+     */
     public void export_node(Node node, File file) {
         try {
-            if (node instanceof Folder) {
-                this.export_folder((Folder) node, file);
-            } else if (node instanceof Snippet) {
-                this.export_snippet((Snippet) node, file);
+            if (node instanceof Snippet) {
+                // Snippets can be exported as binary (if picked file extension is .snip) or as plain text
+                if (this.file_chooser.getTypeDescription(file).contains("SNIP"))
+                    this.export_to_snip(node, file);
+                else
+                    this.export_to_text((Snippet) node, file);
+            } else {
+                // Folders must be exported as binary files.
+                this.export_to_snip(node, file);
             }
         } catch (IOException e) {
             JOptionPane.showMessageDialog (null,
                     "An IOException occurred during export!\n" + e.getMessage(),"IOException",
                     JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    public void export_node(Node node) {
-        try {
-            if (node instanceof Folder) {
-                File file = this.display_export_dialog(ImportExportManager.filter_folder);
-                if (file != null) {
-                    this.export_folder((Folder) node, file);
-                }
-            } else if (node instanceof Snippet) {
-                File file = this.display_export_dialog(ImportExportManager.filter_snippet);
-                if (file != null) {
-                    this.export_snippet((Snippet) node, file);
-                }
-            }
-        } catch (IOException e) {
+        } catch (OverlappingFileLockException e) {
             JOptionPane.showMessageDialog (null,
-                    "An IOException occurred!\n" + e.getMessage(),"IOException",
+                    "File " + file.getName() + " is already in use!","Export warning",
                     JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void export_folder(Folder folder, File file) throws IOException{
+    /**
+     * Ask the user for a file and export to it a Node passed as an argument.
+     *
+     * @param node
+     * Node to export.
+     */
+    public void export_node(Node node) {
+        FileNameExtensionFilter used_filter;
+
+        // Select extension filter based on Node type
+        if (node instanceof Snippet)
+            used_filter = ImportExportManager.filter_snippet;
+        else
+            used_filter = ImportExportManager.filter_folder;
+
+        // Ask user to select a file.
+        File file = this.display_export_dialog(used_filter);
+
+        // Export
+        if (file != null)
+            this.export_node(node, file);
+    }
+
+    /**
+     * Exports the passed Node as binary. Exports to a file passed as argument.
+     *
+     * @param node
+     * Node to export.
+     * @param file
+     * File to export to.
+     * @throws IOException
+     * @throws OverlappingFileLockException
+     */
+    private void export_to_snip(Node node, File file) throws IOException, OverlappingFileLockException {
+        // try-with-resources used to automatically close everything via AutoCloseable interface
         try (FileOutputStream out = new FileOutputStream(file);
              FileChannel channel = out.getChannel();
              FileLock lock = channel.tryLock()) {
 
-            System.out.print("INFO: Exporting to " + file.getAbsolutePath() + "... ");
+            System.out.print("INFO: Exporting as binary to " + file.getAbsolutePath() + "... ");
 
             try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
                  ObjectOutputStream oos = new ObjectOutputStream(baos)) {
 
-                oos.writeObject(folder);
+                // Serialize the node as a byte array
+                oos.writeObject(node);
                 oos.flush();
-                byte[] postingBytes = baos.toByteArray();
+                byte[] object_bytes = baos.toByteArray();
 
-                ByteBuffer buffer = ByteBuffer.allocate(postingBytes.length);
+                // Write to file with buffer
+                ByteBuffer buffer = ByteBuffer.allocate(object_bytes.length);
                 buffer.clear();
-                buffer.put(postingBytes);
+                buffer.put(object_bytes);
                 buffer.flip();
                 channel.write(buffer);
             }
 
             System.out.println("done!");
-        } catch (OverlappingFileLockException e) {
-            JOptionPane.showMessageDialog (null,
-                    "File " + file.getName() + " is already in use!","Export warning",
-                    JOptionPane.ERROR_MESSAGE);
-        } catch (FileNotFoundException e) {
-            JOptionPane.showMessageDialog (null,
-                    "Cannot find file " + file.getName() + "!","Export warning",
-                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void export_snippet(Snippet snippet, File file) throws IOException {
+    /**
+     * Exports the passed Snippet as plain text. Exports to a file passed as argument.
+     *
+     * @param snippet
+     * Snippet to export.
+     * @param file
+     * File to export to.
+     * @throws IOException
+     * @throws OverlappingFileLockException
+     */
+    private void export_to_text(Snippet snippet, File file) throws IOException {
 
         try (FileOutputStream out = new FileOutputStream(file);
              FileChannel channel = out.getChannel();
              FileLock lock = channel.tryLock()) {
 
-            System.out.print("INFO: Exporting to " + file.getAbsolutePath() + "... ");
+            System.out.print("INFO: Exporting as text to " + file.getAbsolutePath() + "... ");
 
-            if (this.file_chooser.getTypeDescription(file).contains("SNIP")) {
-                try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                     ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-
-                    oos.writeObject(snippet);
-                    oos.flush();
-                    byte[] postingBytes = baos.toByteArray();
-
-                    ByteBuffer buffer = ByteBuffer.allocate(postingBytes.length);
-                    buffer.clear();
-                    buffer.put(postingBytes);
-                    buffer.flip();
-                    channel.write(buffer);
-                }
-            } else {
-                String contents = ImportExportManager.snippet_code + ";" + snippet.getTitle() + ";" + snippet.getLang()
-                        + ";\n" + snippet.get();
-                ByteBuffer byteBuffer = ByteBuffer.wrap(contents.getBytes(StandardCharsets.ISO_8859_1));
-                channel.write(byteBuffer);
-            }
+            String contents = snippet.getTitle() + "\n" + snippet.getLang() + "\n" + snippet.get();
+            ByteBuffer byteBuffer = ByteBuffer.wrap(contents.getBytes(StandardCharsets.ISO_8859_1));
+            channel.write(byteBuffer);
 
             System.out.println("done!");
 
@@ -152,7 +182,15 @@ public class ImportExportManager {
         }
     }
 
-    private File display_export_dialog(FileNameExtensionFilter filter) throws IOException {
+    /**
+     * Asks the user to select a file to export to. If the selected file doesn't exist, a new one will be created in its place.
+     *
+     * @param filter
+     * A file extension filter to be applied when prompting the user to select a file.
+     * @return
+     * Returns a file to export to.
+     */
+    private File display_export_dialog(FileNameExtensionFilter filter) {
         this.file_chooser.setFileFilter(filter);
 
         // Ask for file
@@ -162,26 +200,49 @@ public class ImportExportManager {
         if (userSelection == JFileChooser.APPROVE_OPTION) {
             file = this.file_chooser.getSelectedFile();
 
-            // If no extension entered, select default.
-            if (!file.getName().contains(".")) {
+            // If no extension entered, select default (first from filter list).
+            String file_name = file.getName();
+            if (!file_name.contains(".")) {
                 file = new File(file.getAbsolutePath() + "." + filter.getExtensions()[0]);
+            } else {  // Otherwise, check if the extension matches those on filter list.
+                // Extract file extension.
+                String[] file_name_split = file_name.split("[.]");
+                String file_extension = file_name_split[file_name_split.length-1];
+
+                // If it's not on the filter list, display error and return null.
+                if (!Arrays.stream(filter.getExtensions()).anyMatch(file_extension::equals)) {
+                    String message = "Exporting error: " + file_extension + " is not a valid file extension!\n" +
+                            "List of valid extensions for the selected node:\n ";
+                    for (String ext : filter.getExtensions())
+                        message += ext + " ";
+                    JOptionPane.showMessageDialog (null,
+                            message,
+                            "File creation error",
+                            JOptionPane.ERROR_MESSAGE);
+                    return null;
+                }
             }
 
-            // If file already exists ask about overwriting
-            if (!file.createNewFile()) {
-                // Display YES/NO dialog
-                int dialogResult = JOptionPane.showConfirmDialog(null, "File " +
-                                file.getName() + " already exists!\nDo you want to overwrite it?", "Warning",
-                        JOptionPane.YES_NO_OPTION);
+            try {
+                // Attempt to create the selected file.
+                if (!file.createNewFile()) {
+                    // If file already exists ask about overwriting via YES/NO dialog
+                    int dialogResult = JOptionPane.showConfirmDialog(null, "File " +
+                                    file.getName() + " already exists!\nDo you want to overwrite it?", "Overwrite warning",
+                            JOptionPane.YES_NO_OPTION);
 
-                // User picked "YES"
-                if (dialogResult == JOptionPane.YES_OPTION) {
-                    System.out.println("INFO: Overwriting file: " + file.getAbsolutePath());
-                    // User picked "NO" or closed the prompt
-                } else {
-                    System.out.println("INFO: File selection cancelled.");
-                    file = null;
+                    // User picked "YES"
+                    if (dialogResult == JOptionPane.YES_OPTION) {
+                        System.out.println("INFO: Overwriting file: " + file.getAbsolutePath());
+                    } else {  // User picked "NO" or closed the prompt
+                        System.out.println("INFO: File selection cancelled.");
+                        file = null;
+                    }
                 }
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog (null,
+                        "An IOException occurred during file creation!\n" + e.getMessage(),"File creation error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
 
@@ -190,17 +251,38 @@ public class ImportExportManager {
     // endregion
 
     // region METHODS - IMPORT
+    /**
+     * Prompts the user to select a file and imports its contents.
+     *
+     * @return
+     * Imported Node or null in case of failure.
+     */
     public Node import_node() {
         Node imported_node = null;
+
+        // Ask for a file.
         File file = this.display_import_dialog();
+
+        // Attempt import.
         if (file != null)
             imported_node =  this.import_node(file);
+
         return imported_node;
     }
 
+    /**
+     * Imports a Node from a selected File.
+     *
+     * @param file
+     * File to import from.
+     * @return
+     * Imported Node or null in case of failure.
+     */
     public Node import_node(File file) {
 
         Node imported_node = null;
+
+        // Extract file extension.
         String[] extension_split = file.getName().split("[.]");
         String extension = "NO EXTENSION";
         if (extension_split.length > 1)
@@ -221,16 +303,17 @@ public class ImportExportManager {
                     imported_node = (Node) ois.readObject();
                 }
             } else {
-                // Plain text import - Snippets
+                // Plain text import - Snippets only
                 int buffer_size = (int)channel.size();
                 ByteBuffer buffer = ByteBuffer.allocate(buffer_size);
                 channel.read(buffer);
 
                 String file_content = new String(buffer.array(), StandardCharsets.UTF_8);
-                String[] file_content_split = file_content.split(";");
+                String[] file_content_split = file_content.split("\n");
 
-                imported_node = new Snippet(file_content_split[1], file_content_split[2],
-                        file_content_split[3].substring(1));
+                imported_node = new Snippet(file_content_split[0], file_content_split[1],
+                        String.join("\n",
+                                Arrays.copyOfRange(file_content_split, 2, file_content_split.length)));
             }
         } catch (OverlappingFileLockException e) {
             // File is already in use by someone else.
@@ -247,7 +330,7 @@ public class ImportExportManager {
                     "An IOException occurred during import!\n" + e.getMessage(),"IOException",
                     JOptionPane.ERROR_MESSAGE);
         } catch (ClassNotFoundException e) {
-            System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+            System.out.println(e.getMessage());
         }
 
         System.out.println("done!");
@@ -255,7 +338,16 @@ public class ImportExportManager {
         return imported_node;
     }
 
+    /**
+     * Prompts the user to select a file to import from.
+     *
+     * @return
+     * Selected file or null if the picked file is invalid.
+     */
     private File display_import_dialog() {
+        // Set file filter (filter for snippets includes both txt and snip - binary)
+        this.file_chooser.setFileFilter(ImportExportManager.filter_snippet);
+
         // Ask for file
         int userSelection = this.file_chooser.showSaveDialog(null);
         File file = null;
@@ -277,6 +369,11 @@ public class ImportExportManager {
     }
     // endregion
 
+    /**
+     * Tests exporting and importing both as binary and plain text. Check is FileLock works properly using
+     * multithreading and FileHogger class.
+     * @param args
+     */
     public static void main(String[] args) {
         ImportExportManager manager = new ImportExportManager();
 
