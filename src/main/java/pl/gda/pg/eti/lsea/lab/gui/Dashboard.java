@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import javax.swing.*;
@@ -13,6 +14,7 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import pl.gda.pg.eti.lsea.lab.*;
+import pl.gda.pg.eti.lsea.lab.testing.FileHogger;
 import pl.gda.pg.eti.lsea.lab.testing.MultithreadedSearch;
 import pl.gda.pg.eti.lsea.lab.testing.RandomStructure;
 
@@ -145,6 +147,27 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
                     }
                 }
             }
+        }, HOG_FILE("Block file...", KeyEvent.VK_B, "Blocks file for 60 seconds.") {
+            @Override
+            void execute(Node node, FolderTree tree_model, TreePath node_path, JTree tree) {
+                JFileChooser file_chooser = new JFileChooser();
+                int userSelection = file_chooser.showSaveDialog(null);
+                File file = null;
+                if (userSelection == JFileChooser.APPROVE_OPTION) {
+                    file = file_chooser.getSelectedFile();
+                    FileHogger hogger = new FileHogger(file, 0);
+                    Thread thread = new Thread(hogger);
+                    thread.start();
+                    JOptionPane.showMessageDialog(null, "Hogging file \"" +
+                            file.getAbsolutePath() + "\".\nClick OK to finish hogging.");
+                    thread.interrupt();
+                    try {
+                        thread.join();
+                    } catch (InterruptedException ex) {
+                        System.out.println(ex.getMessage());
+                    }
+                }
+            }
         };
 
         private final String accessible_desc;
@@ -217,6 +240,11 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
         JMenu menu_file = new JMenu("File");
         menu_file.setMnemonic(KeyEvent.VK_F);
         menu_file.getAccessibleContext().setAccessibleDescription("File menu");
+
+        // Testing menu
+        JMenu menu_testing = new JMenu("Testing");
+        menu_file.setMnemonic(KeyEvent.VK_T);
+        menu_file.getAccessibleContext().setAccessibleDescription("Testing menu");
 
         // File -> Copy
         JMenuItem menu_file_copy = FileAction.COPY.getJMenuItem();
@@ -296,6 +324,12 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
 
         menu_bar.add(menu_file);
         menu_bar.add(menu_search);
+        menu_bar.add(menu_testing);
+
+        // File -> Hog file
+        JMenuItem menu_testing_hog = FileAction.HOG_FILE.getJMenuItem();
+        menu_testing_hog.addActionListener(this);
+        menu_testing.add(menu_testing_hog);
         // endregion
 
         // Layout
