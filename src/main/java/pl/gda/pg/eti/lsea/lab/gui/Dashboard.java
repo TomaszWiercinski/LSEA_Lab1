@@ -111,7 +111,7 @@ public class Dashboard extends JFrame implements TreeSelectionListener, ActionLi
                 // Search the entire structure by title.
                 // Pop-up asking for search term.
                 String term = JOptionPane.showInputDialog(this, "Type search term:");
-                if (term != null && !term.isBlank()) {
+                if (term != null && !term.isEmpty()) {
                     // example multithreading usage / implementation - for more information inquire within MultithreadedSearch.java
                     MultithreadedSearch search = new MultithreadedSearch(5, term, ((Folder)tree_model.getRoot()).getAllChildren());
                     search.search();

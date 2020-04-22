@@ -116,7 +116,7 @@ public abstract class Node implements Cloneable, Comparable<Node>, Serializable 
     
     public Node getNodeFromPath(String path) {
         String[] path_arr = path.split("/");
-        if (path_arr[0].isBlank())
+        if (path_arr[0].isEmpty())
             path_arr = Arrays.copyOfRange(path_arr, 1, path_arr.length);
         return getNodeFromPath(path_arr);
     }
